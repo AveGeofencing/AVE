@@ -1,0 +1,16 @@
+from sqlalchemy import Column, Integer, String
+from sqlalchemy.orm import relationship, Mapped, mapped_column
+from app.database.database import Base
+
+class User(Base):
+    __tablename__ = "Users"
+
+    id: Mapped[int] = mapped_column(Integer, autoincrement=True, primary_key=True)
+    user_matric: Mapped[str] = mapped_column(String(50), unique=True)
+    email: Mapped[str] = mapped_column(String(60), unique=True)
+    username: Mapped[str] = mapped_column(String(60))
+    hashed_password: Mapped[str] = mapped_column(String(128))
+    role: Mapped[str] = mapped_column(String(15))
+
+    geofences = relationship("Geofence", back_populates="creator")
+    sessions = relationship("Session", back_populates="user")
