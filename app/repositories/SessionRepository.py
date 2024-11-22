@@ -1,6 +1,6 @@
 from ..models import Session, User
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import and_, or_
+from sqlalchemy import and_, delete, or_
 from ..models import Session
 from datetime import datetime
 from sqlalchemy.future import select
@@ -26,7 +26,7 @@ class SessionRepository:
             .options(selectinload(Session.user))
             .filter(
                 and_(
-                    Session.token == session_token, Session.expires_at >= datetime.now()
+                    Session.token == session_token, Session.is_expired == False
                 )
             )
         )
@@ -56,10 +56,11 @@ class SessionRepository:
         return new_session.token
 
     async def deactivate_session(self, session_token):
-        stmt = select(Session).filter(Session.token == session_token)
-        result = await self.db_session.execute(stmt)
-        existing_session = result.scalars().first()
+        stmt = delete(Session).filter(Session.token == session_token)
+        await self.db_session.execute(stmt)
+        await self.db_session.commit()
 
-        await self.db_session.delete(existing_session)
-
+    async def deactivate_all_user_sessions(self, user_matric:str):
+        stmt = delete(Session).filter(Session.user_id == user_matric)
+        await self.db_session.execute(stmt)        
         await self.db_session.commit()
