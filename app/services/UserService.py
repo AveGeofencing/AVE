@@ -98,32 +98,34 @@ class UserService:
         user = self.__decode_password_reset_token(token)
 
         new_hashed_password = bcrypt_context.hash(new_password)
-        # try:
-        change_password_message = await self.repository.change_user_password(
-            user_email=user["email"], new_hashed_password=new_hashed_password
-        )
-        sessionRepository = SessionRepository(self.session)
-        await sessionRepository.deactivate_all_user_sessions(user["user_matric"])
-        body = f"""
-            <html>
-                <body> 
-                    <h3>
-                        Hi {user["username"]},
-                    </h3>
-                    <p>
-                        Your password has just been changed. <br>If you didn't change your password and you think your account has been compromised, report to help.
+        try:
+            change_password_message = await self.repository.change_user_password(
+                user_email=user["email"], new_hashed_password=new_hashed_password
+            )
+            
+            sessionRepository = SessionRepository(self.session)
+            await sessionRepository.deactivate_all_user_sessions(user["user_matric"])
 
-                        <br><br>Thanks,<br>
-                        Ave Geofencing.
-                    </p>
-                </body>
-            </html>
-            """
-        background_tasks.add_task(send_email, subject="Password Changed.", recipients=[user["email"]], body = body)
-        return change_password_message
+            body = f"""
+                <html>
+                    <body> 
+                        <h3>
+                            Hi {user["username"]},
+                        </h3>
+                        <p>
+                            Your password has just been changed. <br>If you didn't change your password and you think your account has been compromised, report to help.
 
-        # except Exception as e:
-        #     raise HTTPException(status_code=500, detail=f"Internal Server Error {e}")
+                            <br><br>Thanks,<br>
+                            Ave Geofencing.
+                        </p>
+                    </body>
+                </html>
+                """
+            background_tasks.add_task(send_email, subject="Password Changed.", recipients=[user["email"]], body = body)
+            return change_password_message
+
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Internal Server Error {e}")
 
     async def get_user_by_email_or_matric(self, email: str = None, matric: str = None):
         user = await self.repository.get_user_by_email_or_matric(email, matric)
