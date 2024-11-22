@@ -2,6 +2,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
+from app.routers import StudentRouter
+
 from .routers import AdminRouter
 from .routers import GeneralUserRouter
 from .database import sessionmanager
@@ -23,7 +25,7 @@ app = FastAPI(
     title="Ave Geofencing",
     description="A smart solution for student attendance",
     version="V1",
-    lifespan=lifespan,
+    lifespan=lifespan
 )
 app.add_middleware(
     CORSMiddleware,
@@ -36,4 +38,4 @@ app.add_middleware(
 app.include_router(GeneralUserRouter)
 app.include_router(AuthRouter)
 app.include_router(AdminRouter)
-# app.include_router(StudentRouter)
+app.include_router(StudentRouter)
