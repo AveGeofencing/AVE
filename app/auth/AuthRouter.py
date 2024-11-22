@@ -5,6 +5,8 @@ from app.auth.sessions.SessionHandler import SessionHandler
 
 from typing import Annotated
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.utils.APIKeys import get_api_key
 from ..database import get_db_session
 from passlib.context import CryptContext
 
@@ -12,20 +14,20 @@ AuthRouter = APIRouter(prefix="/auth", tags=["auth"])
 
 DBSessionDep = Annotated[AsyncSession, Depends(get_db_session)]
 password_request_form = Annotated[OAuth2PasswordRequestForm, Depends()]
+api_key_dependency = Annotated[str, Depends(get_api_key)]
+
 bcrypt_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-SESSION_TIMEOUT_MINUTES = 30
-
-
+SESSION_TIMEOUT_MINUTES = 10
 
 @AuthRouter.post("/token")
 async def login(
-    response: Response, form_data: password_request_form, session: DBSessionDep
+    response: Response, form_data: password_request_form, session: DBSessionDep, _: api_key_dependency
 ):
     sessionHandler = SessionHandler(session)
 
     user_login_response = await sessionHandler.login(
-        matric=form_data.username, email=form_data.username, password=form_data.password
+        user_matric=form_data.username, email=form_data.username, password=form_data.password
             )
 
     session_token = user_login_response["session_token"]
@@ -73,6 +75,8 @@ async def get_user_by_session_token(request: Request, session: DBSessionDep):
         
         user_data = await sessionHandler.get_user_by_session(session_token)
         
+        if not user_data:
+             raise HTTPException(status_code=401, detail="Session expired")
         return user_data
 
 ##TODO: Handle the case where token is tampered with before login out,
