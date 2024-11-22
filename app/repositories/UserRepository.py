@@ -31,3 +31,11 @@ class UserRepository:
         self.session.add(new_user)
         await self.session.commit()
         return {"message": "Successfully added user. You can now login"}
+    
+    async def change_user_password(self, user_email: str, new_hashed_password: str):
+        user = await self.get_user_by_email_or_matric(email = user_email)
+
+        user.hashed_password = new_hashed_password
+        await self.session.commit()
+
+        return {"message" : "Successfully changed password"}
