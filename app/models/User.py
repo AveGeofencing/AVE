@@ -3,7 +3,7 @@ from sqlalchemy.orm import relationship, Mapped, mapped_column
 from app.database.database import Base
 
 class User(Base):
-    __tablename__ = "Users"
+    __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(Integer, autoincrement=True, primary_key=True)
     user_matric: Mapped[str] = mapped_column(String(50), unique=True)
@@ -15,3 +15,4 @@ class User(Base):
     geofences = relationship("Geofence", back_populates="creator")
     sessions = relationship("Session", back_populates="user")
     password_reset_tokens = relationship("PasswordResetToken", back_populates="user")
+    attendances = relationship("AttendanceRecord", back_populates="user")

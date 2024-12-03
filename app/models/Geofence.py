@@ -1,10 +1,12 @@
-from sqlalchemy import TIMESTAMP, ForeignKey, Integer, String, Float, DateTime
+from datetime import datetime
+from zoneinfo import ZoneInfo
+from sqlalchemy import TIMESTAMP, ForeignKey, Integer, String, Float, DateTime, func
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from app.database.database import Base
 
 
 class Geofence(Base):
-    __tablename__ = "Geofences"
+    __tablename__ = "geofences"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     fence_code: Mapped[str] = mapped_column(String(15), unique=True)
@@ -16,9 +18,8 @@ class Geofence(Base):
     start_time: Mapped[TIMESTAMP] = mapped_column(TIMESTAMP(timezone=True))
     end_time: Mapped[TIMESTAMP] = mapped_column(TIMESTAMP(timezone=True))
     status: Mapped[str] = mapped_column(String(60))
-    time_created: Mapped[TIMESTAMP] = mapped_column(TIMESTAMP(timezone=True))
-
-    # foreign key
-    creator_matric: Mapped[str] = mapped_column(String(50), ForeignKey("Users.user_matric"))
+    time_created: Mapped[TIMESTAMP] = mapped_column(TIMESTAMP(timezone=True),default=datetime.now(tz=ZoneInfo("UTC")))
+    creator_matric: Mapped[str] = mapped_column(String(50), ForeignKey("users.user_matric"))
 
     creator = relationship("User", back_populates="geofences")
+    student_attendances = relationship("AttendanceRecord", back_populates="geofence")

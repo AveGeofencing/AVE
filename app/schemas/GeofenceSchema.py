@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, AwareDatetime
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
@@ -8,8 +8,8 @@ class GeofenceCreateModel(BaseModel):
     longitude: float
     radius: float
     fence_type: str
-    start_time: datetime = Field(default_factory=lambda: datetime.now(tz=ZoneInfo("Africa/Lagos")))
-    end_time: datetime = Field(default_factory=lambda: datetime.now(tz=ZoneInfo("Africa/Lagos")))
+    start_time: AwareDatetime
+    end_time: AwareDatetime
 
 
     class Config:

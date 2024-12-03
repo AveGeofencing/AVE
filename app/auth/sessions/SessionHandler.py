@@ -1,4 +1,5 @@
 import uuid
+from zoneinfo import ZoneInfo
 
 from fastapi import HTTPException
 from datetime import datetime, timedelta
@@ -34,7 +35,7 @@ class SessionHandler:
         return existing_user_session
 
     async def create_new_session(self, user_matric: str):
-        EXPIRES_AT = datetime.now() + timedelta(minutes=self.SESSION_TIMEOUT_MINUTES)
+        EXPIRES_AT = datetime.now(tz=ZoneInfo("Africa/Lagos")) + timedelta(minutes=self.SESSION_TIMEOUT_MINUTES)
         session_token = str(uuid.uuid4())  # Generate a unique session token
 
         existing_user_session = await self.get_user_session_by_matric(user_matric)
@@ -72,7 +73,10 @@ class SessionHandler:
         existing_user = await self.sessionRepository.get_user_by_email_or_matric(
             email=email, matric=user_matric
         )
-
+        if not existing_user:
+            raise HTTPException(
+                status_code=400, detail="User not found. Please sign up"
+            )
         if not bcrypt_context.verify(password, existing_user.hashed_password):
             raise HTTPException(
                 status_code=400, detail="Incorrect username or password"

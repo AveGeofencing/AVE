@@ -1,8 +1,10 @@
-from fastapi import FastAPI
+from typing import Annotated
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
-from app.routers import StudentRouter
+from app.routers import GeofenceRouter, StudentRouter
+from app.utils.APIKeys import get_api_key
 
 from .routers import AdminRouter
 from .routers import GeneralUserRouter
@@ -20,6 +22,7 @@ async def lifespan(app: FastAPI):
         # Close the DB connection
         await sessionmanager.close()
 
+api_key_dependency = Annotated[str, Depends(get_api_key)]
 
 app = FastAPI(
     title="Ave Geofencing",
@@ -35,7 +38,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.get("/")
+async def index( _ : api_key_dependency):
+    return "Hello"
+
 app.include_router(GeneralUserRouter)
 app.include_router(AuthRouter)
 app.include_router(AdminRouter)
 app.include_router(StudentRouter)
+app.include_router(GeofenceRouter)
