@@ -31,7 +31,7 @@ class Session(Base):
 
     is_expired: Mapped[bool] = mapped_column(
         Boolean,
-        server_default="FALSE",
+        default=False,
         nullable=False
     )
     
