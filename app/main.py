@@ -8,8 +8,9 @@ from app.utils.APIKeys import get_api_key
 
 from .routers import AdminRouter
 from .routers import GeneralUserRouter
-from .database import sessionmanager
+from .database import sessionmanager, Base
 from .auth.AuthRouter import AuthRouter
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -17,6 +18,10 @@ async def lifespan(app: FastAPI):
     Function that handles startup and shutdown events.
     To understand more, read https://fastapi.tiangolo.com/advanced/events/
     """
+     # Startup logic: Create database tables
+    async with sessionmanager._engine.begin() as connection:
+        await connection.run_sync(Base.metadata.create_all)
+        
     yield
     if sessionmanager._engine is not None:
         # Close the DB connection
