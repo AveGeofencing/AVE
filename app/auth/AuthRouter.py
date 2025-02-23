@@ -50,7 +50,6 @@ async def logout(request: Request,response: Response, session: DBSessionDep) -> 
 
     Parameters:
     - request (Request): The FastAPI Request object containing the cookies.
-    - session (DBSessionDep): The database session for asynchronous operations.
 
     Returns:
     - dict: A dictionary containing a message indicating the logout status.
