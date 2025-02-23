@@ -1,5 +1,5 @@
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from fastapi import APIRouter, Depends, HTTPException, Request, Response
+from fastapi import APIRouter, Cookie, Depends, HTTPException, Request, Response
 
 from app.auth.sessions.SessionHandler import SessionHandler
 
@@ -20,30 +20,40 @@ bcrypt_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 SESSION_TIMEOUT_MINUTES = 24 * 60
 
+
 @AuthRouter.post("/token")
 async def login(
-    response: Response, form_data: password_request_form, session: DBSessionDep, _: api_key_dependency
+    response: Response,
+    form_data: password_request_form,
+    session: DBSessionDep,
+    _: api_key_dependency,
+    request: Request,
 ):
     sessionHandler = SessionHandler(session)
 
-    user_login_response = await sessionHandler.login(
-        user_matric=form_data.username, email=form_data.username, password=form_data.password
-            )
+    # session_cookie = request.cookies.get("session_token")
 
-    session_token = user_login_response["session_token"]
+    user_login_response = await sessionHandler.login(
+        user_matric=form_data.username,
+        email=form_data.username,
+        password=form_data.password,
+        session_cookie=None,
+    )
+
+    # Set new session cookie
     response.set_cookie(
         key="session_token",
-        value=session_token,
+        value=user_login_response["session_token"],
         httponly=True,
-        secure=True,  # Set to True for HTTPS
+        secure=True,
         max_age=SESSION_TIMEOUT_MINUTES * 60,
     )
-    
+
     return user_login_response
 
 
 @AuthRouter.delete("/logout")
-async def logout(request: Request,response: Response, session: DBSessionDep) -> dict:
+async def logout(request: Request, response: Response, session: DBSessionDep) -> dict:
     """
     This function handles the logout process for a user. It retrieves the session token from the request cookies,
     checks if it exists, and then deactivates the session using the SessionHandler.
@@ -60,23 +70,25 @@ async def logout(request: Request,response: Response, session: DBSessionDep) -> 
 
     sessionHandler = SessionHandler(session)
     log_out_message = await sessionHandler.deactivate_session(session_token)
-    
+
     response.delete_cookie("session_token")
     return {"message": log_out_message}
 
+
 @AuthRouter.get("/get_user_by_token")
 async def get_user_by_session_token(request: Request, session: DBSessionDep):
-        sessionHandler = SessionHandler(session)
-        session_token = request.cookies.get('session_token')
+    sessionHandler = SessionHandler(session)
+    session_token = request.cookies.get("session_token")
 
-        if not session_token:
-             raise HTTPException(status_code=401, detail="No session token provided")
-        
-        user_data = await sessionHandler.get_user_by_session(session_token)
-        
-        if not user_data:
-             raise HTTPException(status_code=401, detail="Session expired")
-        return user_data
+    if not session_token:
+        raise HTTPException(status_code=401, detail="No session token provided")
+
+    user_data = await sessionHandler.get_user_by_session(session_token)
+
+    if not user_data:
+        raise HTTPException(status_code=401, detail="Session expired")
+    return user_data
+
 
 ##TODO: Handle the case where token is tampered with before login out,
 # in which case the token would be tampered with and not be found on the database to begin with,

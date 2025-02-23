@@ -35,7 +35,9 @@ class SessionHandler:
         return existing_user_session
 
     async def create_new_session(self, user_matric: str):
-        EXPIRES_AT = datetime.now(tz=ZoneInfo("Africa/Lagos")) + timedelta(minutes=self.SESSION_TIMEOUT_MINUTES)
+        EXPIRES_AT = datetime.now(tz=ZoneInfo("Africa/Lagos")) + timedelta(
+            minutes=self.SESSION_TIMEOUT_MINUTES
+        )
         session_token = str(uuid.uuid4())  # Generate a unique session token
 
         existing_user_session = await self.get_user_session_by_matric(user_matric)
@@ -69,7 +71,13 @@ class SessionHandler:
 
         return "Logged out successfully"
 
-    async def login(self, user_matric: str, password: str, email: str = None):
+    async def login(
+        self,
+        user_matric: str,
+        password: str,
+        email: str = None,
+        session_cookie: str = None,
+    ):
         existing_user = await self.sessionRepository.get_user_by_email_or_matric(
             email=email, matric=user_matric
         )
@@ -81,6 +89,16 @@ class SessionHandler:
             raise HTTPException(
                 status_code=400, detail="Incorrect username or password"
             )
+        # Check if a session already exists
+        existing_session = await self.get_user_session_by_matric(user_matric)
+
+        if existing_session:
+            if session_cookie is None or session_cookie != existing_session.token:
+                return {
+                    "message": "Session restored",
+                    "session_token": existing_session.token,
+                    "role": existing_user.role,
+                }
 
         session_token = await self.create_new_session(
             user_matric=existing_user.user_matric
@@ -89,5 +107,5 @@ class SessionHandler:
         return {
             "message": "Successfully logged in",
             "session_token": session_token,
-            "role" : existing_user.role
+            "role": existing_user.role,
         }
