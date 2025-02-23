@@ -1,5 +1,5 @@
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from fastapi import APIRouter, Cookie, Depends, HTTPException, Request, Response
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
 
 from app.auth.sessions.SessionHandler import SessionHandler
 
@@ -27,25 +27,21 @@ async def login(
     form_data: password_request_form,
     session: DBSessionDep,
     _: api_key_dependency,
-    request: Request,
 ):
     sessionHandler = SessionHandler(session)
-
-    # session_cookie = request.cookies.get("session_token")
 
     user_login_response = await sessionHandler.login(
         user_matric=form_data.username,
         email=form_data.username,
         password=form_data.password,
-        session_cookie=None,
     )
 
-    # Set new session cookie
+    session_token = user_login_response["session_token"]
     response.set_cookie(
         key="session_token",
-        value=user_login_response["session_token"],
+        value=session_token,
         httponly=True,
-        secure=True,
+        secure=True,  # Set to True for HTTPS
         max_age=SESSION_TIMEOUT_MINUTES * 60,
     )
 
