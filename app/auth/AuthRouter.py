@@ -18,7 +18,7 @@ api_key_dependency = Annotated[str, Depends(get_api_key)]
 
 bcrypt_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-SESSION_TIMEOUT_MINUTES = 10
+SESSION_TIMEOUT_MINUTES = 24 * 60
 
 @AuthRouter.post("/token")
 async def login(

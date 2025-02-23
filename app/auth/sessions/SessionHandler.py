@@ -12,7 +12,7 @@ bcrypt_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 class SessionHandler:
     def __init__(self, db_session: AsyncSession):
-        self.SESSION_TIMEOUT_MINUTES = 10
+        self.SESSION_TIMEOUT_MINUTES = 24 * 60
         self.sessionRepository = SessionRepository(db_session=db_session)
 
     async def get_user_by_session(self, session_token):
