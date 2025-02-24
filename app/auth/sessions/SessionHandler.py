@@ -90,5 +90,6 @@ class SessionHandler:
         return {
             "message": "Successfully logged in",
             "session_token": session_token,
+            "username": existing_user.username,
             "role": existing_user.role,
         }
