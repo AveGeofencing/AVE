@@ -6,9 +6,10 @@ from datetime import datetime, timedelta
 from sqlalchemy.ext.asyncio import AsyncSession
 from ...repositories import SessionRepository
 from passlib.context import CryptContext
+from ...utils.config import settings 
 
 bcrypt_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
+WANT_SINGLE_SIGNIN_FLAG = settings.WANT_SINGLE_SIGNIN
 
 class SessionHandler:
     def __init__(self, db_session: AsyncSession):
@@ -35,17 +36,20 @@ class SessionHandler:
         return existing_user_session
 
     async def create_new_session(self, user_matric: str):
-        EXPIRES_AT = datetime.now(tz=ZoneInfo("Africa/Lagos")) + timedelta(days=1)
-        session_token = str(uuid.uuid4())  # Generate a unique session token
-
         existing_user_session = await self.get_user_session_by_matric(user_matric)
         if existing_user_session:
-            return existing_user_session.token
-            raise HTTPException(
-                status_code=400,
-                detail=f"Already logged in. Sign out of other devices before logging in again",
-            )
+            if WANT_SINGLE_SIGNIN_FLAG:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Already logged in. Sign out of other devices before logging in again",
+                )
 
+            return existing_user_session.token
+            
+        
+        EXPIRES_AT = datetime.now(tz=ZoneInfo("Africa/Lagos")) + timedelta(days=1)
+        session_token = str(uuid.uuid4())  # Generate a unique session token
+        
         token = await self.sessionRepository.create_new_session(
             session_token=session_token, EXPIRES_AT=EXPIRES_AT, user_matric=user_matric
         )
