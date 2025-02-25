@@ -15,10 +15,9 @@ AdminRouter = APIRouter(
 )
 
 DBSessionDep = Annotated[AsyncSession, Depends(get_db_session)]
-authenticate_admin = Annotated[dict, Depends(authenticate_admin_user)]
 
-@AdminRouter.get("/{email}")
-async def get_user_by_email(email:str, session: DBSessionDep, _: authenticate_admin):
+@AdminRouter.get("/{email}", dependencies=[Depends(authenticate_admin_user)])
+async def get_user_by_email(email:str, session: DBSessionDep):
     # print(user_data)
     userService = UserService(session)
     return await userService.get_user_by_email_or_matric(email)

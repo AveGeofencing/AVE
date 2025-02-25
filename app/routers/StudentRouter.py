@@ -6,7 +6,7 @@ from ..services import UserService
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import Depends, BackgroundTasks
 from ..database import get_db_session
-from ..dependencies.sessionDependencies import authenticate_admin_user, authenticate_student_user
+from ..dependencies.sessionDependencies import authenticate_student_user
 StudentRouter = APIRouter(
     prefix = "/users/student",
     tags=["Users/Student"]

@@ -10,11 +10,10 @@ from ..schemas.UserSchema import UserCreateModel
 
 GeneralUserRouter = APIRouter(prefix="/users", tags=["General User"])
 DBSessionDep = Annotated[AsyncSession, Depends(get_db_session)]
-api_key_dependency = Annotated[str, Depends(get_api_key)]
 
 
-@GeneralUserRouter.post("/create_user")
-async def create_new_user(user: UserCreateModel, session: DBSessionDep, _: api_key_dependency):
+@GeneralUserRouter.post("/create_user", dependencies= [Depends(get_api_key)])
+async def create_new_user(user: UserCreateModel, session: DBSessionDep,):
     user_service = UserService(session)
     created_message = await user_service.create_new_user(user)
 

@@ -20,9 +20,9 @@ async def create_geofence(
     geofenceService = GeofenceService(session)
     return await geofenceService.create_geofence(geofence.name, admin["user_matric"], geofence)
 
-@GeofenceRouter.get("/get_geofence")
+@GeofenceRouter.get("/get_geofence", dependencies= [Depends(authenticate_admin_user)])
 async def get_geofence_details(
-    course_title: str, date: datetime, session: DBSessionDep, _: authenticate_admin
+    course_title: str, date: datetime, session: DBSessionDep
 ):
     """Returns details of geofence for a given course title"""
     geofenceService = GeofenceService(session)
