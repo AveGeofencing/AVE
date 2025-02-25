@@ -37,7 +37,7 @@ app = FastAPI(
 )
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Just for Development. Would be changed later.
+    allow_origins=["https://127.0.0.0:3000", "https://localhost:3000/", "https://ave-self.vercel.app/"],  # Just for Development. Would be changed later.
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
