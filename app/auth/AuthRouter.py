@@ -44,7 +44,6 @@ async def login(
         secure=True,  # Set to True for HTTPS
         samesite="None",
         max_age=SESSION_TIMEOUT_MINUTES * 60,
-        domain="https://ave-po7b.onrender.com/",
     )
 
     return user_login_response
