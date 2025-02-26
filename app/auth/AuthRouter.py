@@ -21,12 +21,11 @@ bcrypt_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 SESSION_TIMEOUT_MINUTES = 24 * 60
 
 
-@AuthRouter.post("/token")
+@AuthRouter.post("/token", dependencies=[Depends(get_api_key)])
 async def login(
     response: Response,
     form_data: password_request_form,
     session: DBSessionDep,
-    _: api_key_dependency,
 ):
     sessionHandler = SessionHandler(session)
 
@@ -44,7 +43,6 @@ async def login(
         secure=True,  # Set to True for HTTPS
         samesite="None",
         max_age=SESSION_TIMEOUT_MINUTES * 60,
-        domain="ave-self.vercel.app",
     )
 
     return user_login_response

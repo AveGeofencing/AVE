@@ -36,17 +36,17 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-origins = ["https://127.0.0.0:3000", "https://localhost:3000/", "https://ave-self.vercel.app/"]
+origins = ["http://127.0.0.0:3000", "http://localhost:3000/", "https://ave-self.vercel.app/", "http://127.0.0.1:3000"]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Just for Development. Would be changed later.
+    allow_origins=origins,  # Just for Development. Would be changed later.
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-@app.get("/")
-async def index( _ : api_key_dependency):
+@app.get("/", dependencies=[Depends(get_api_key)])
+async def index():
     return "Hello"
 
 app.include_router(GeneralUserRouter)
