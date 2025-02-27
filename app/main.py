@@ -18,14 +18,15 @@ async def lifespan(app: FastAPI):
     Function that handles startup and shutdown events.
     To understand more, read https://fastapi.tiangolo.com/advanced/events/
     """
-     # Startup logic: Create database tables
+    # Startup logic: Create database tables
     async with sessionmanager._engine.begin() as connection:
         await connection.run_sync(Base.metadata.create_all)
-        
+
     yield
     if sessionmanager._engine is not None:
         # Close the DB connection
         await sessionmanager.close()
+
 
 api_key_dependency = Annotated[str, Depends(get_api_key)]
 
@@ -33,10 +34,15 @@ app = FastAPI(
     title="Ave Geofencing",
     description="A smart solution for student attendance",
     version="V1",
-    lifespan=lifespan
+    lifespan=lifespan,
 )
 
-origins = ["http://127.0.0.0:3000", "http://localhost:3000/", "https://ave-self.vercel.app", "http://127.0.0.1:3000"]
+origins = [
+    "http://127.0.0.0:3000",
+    "http://localhost:3000",
+    "https://ave-self.vercel.app",
+    "http://127.0.0.1:3000",
+]
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,  # Just for Development. Would be changed later.
@@ -45,9 +51,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 @app.get("/", dependencies=[Depends(get_api_key)])
 async def index():
     return "Hello"
+
 
 app.include_router(GeneralUserRouter)
 app.include_router(AuthRouter)

@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..schemas import GeofenceCreateModel
 from ..database import get_db_session
-from ..dependencies.sessionDependencies import authenticate_admin_user
+from ..dependencies.sessionDependencies import authenticate_admin_user, authenticate_user_by_session_token
 from ..services.GeofenceService import GeofenceService
 
 GeofenceRouter = APIRouter(prefix="/geofences", tags=["Geofences"])
@@ -29,7 +29,7 @@ async def get_geofence_details(
     geofence = await geofenceService.get_geofence(course_title, date)
     return {"geofence": geofence}
 
-@GeofenceRouter.get("/get_geofences")
+@GeofenceRouter.get("/get_geofences", dependencies= [Depends(authenticate_user_by_session_token)])
 async def get_geofences(session: DBSessionDep):
     """Returns all the geofences created"""
     geofenceService = GeofenceService(session)
