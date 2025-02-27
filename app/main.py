@@ -42,6 +42,7 @@ origins = [
     "http://localhost:3000",
     "https://ave-self.vercel.app",
     "http://127.0.0.1:3000",
+    "https://ave-po7b.onrender.com"
 ]
 app.add_middleware(
     CORSMiddleware,
