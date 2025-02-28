@@ -42,7 +42,9 @@ origins = [
     "http://localhost:3000",
     "https://ave-self.vercel.app",
     "http://127.0.0.1:3000",
-    "https://ave-po7b.onrender.com"
+    "https://ave-po7b.onrender.com",
+    "https://368f-102-88-108-70.ngrok-free.app",
+    "https://mw487dl1-8000.uks1.devtunnels.ms"
 ]
 app.add_middleware(
     CORSMiddleware,
@@ -55,7 +57,7 @@ app.add_middleware(
 
 @app.get("/", dependencies=[Depends(get_api_key)])
 async def index():
-    return "Hello"
+    return "Hello World 1"
 
 
 app.include_router(GeneralUserRouter)

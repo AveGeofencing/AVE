@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field, AwareDatetime
-from datetime import datetime
-from zoneinfo import ZoneInfo
+
+
 
 class GeofenceCreateModel(BaseModel):
     name: str
@@ -10,7 +10,6 @@ class GeofenceCreateModel(BaseModel):
     fence_type: str
     start_time: AwareDatetime
     end_time: AwareDatetime
-
 
     class Config:
         from_attributes = True

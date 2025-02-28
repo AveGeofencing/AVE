@@ -31,7 +31,7 @@ async def authenticate_student_user(
     user_data: dict = Depends(authenticate_user_by_session_token),
 ):
     if not user_data:
-        return "No user data provided"
+        raise HTTPException(status_code=404, detail="No session token. Login again")
 
     if user_data["role"] != "student":
         raise HTTPException(
@@ -45,7 +45,7 @@ async def authenticate_admin_user(
     user_data: dict = Depends(authenticate_user_by_session_token),
 ):
     if not user_data:
-        return "No user data provided"
+        raise HTTPException(status_code=401, detail="No session token. Login again")
     if user_data["role"] != "admin":
         raise HTTPException(
             status_code=401, detail="Endpoint can only be accessed by admins"

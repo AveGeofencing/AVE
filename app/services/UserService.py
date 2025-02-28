@@ -45,7 +45,7 @@ class UserService:
         user = await self.repository.get_user_by_email_or_matric(email, matric)
 
         if user is None:
-            return None
+            raise HTTPException(status_code=404, detail="User does not exist")
 
         return {
             "user_username": user.username,
@@ -55,7 +55,9 @@ class UserService:
             "user_attendances": user.attendances,
         }
 
-    async def get_user_records(self, user_matric: str, course_title: Optional[str] = None):
+    async def get_user_records(
+        self, user_matric: str, course_title: Optional[str] = None
+    ):
         user = await self.repository.get_user_by_email_or_matric(matric=user_matric)
         if course_title is None:
             try:
@@ -63,7 +65,8 @@ class UserService:
                     return {f"attendance": user.attendances}
 
                 raise HTTPException(
-                    status_code=404, detail=f"No attendances for user: {user.user_matric}"
+                    status_code=404,
+                    detail=f"No attendances for user: {user.user_matric}",
                 )
             except Exception as e:
                 logger.error(f"Something went wrong in fetching user records")
@@ -74,17 +77,18 @@ class UserService:
             try:
                 if user and user.attendances:
                     user_attendances = [
-                        attendance for attendance in user.attendances
+                        attendance
+                        for attendance in user.attendances
                         if attendance.course_title == course_title
                     ]
                     return {f"attendance": user_attendances}
-                
+
             except Exception as e:
                 logger.error(f"Something went wrong in fetching user records")
                 logger.error(str(e))
 
                 raise HTTPException(status_code=500, detail=" Internal server error")
-    
+
     async def __generate_password_reset_token(
         self,
         email: EmailStr,

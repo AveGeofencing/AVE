@@ -5,12 +5,17 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..schemas import GeofenceCreateModel
 from ..database import get_db_session
-from ..dependencies.sessionDependencies import authenticate_admin_user, authenticate_user_by_session_token
+from ..dependencies.sessionDependencies import (
+    authenticate_admin_user,
+    authenticate_student_user,
+    authenticate_user_by_session_token,
+)
 from ..services.GeofenceService import GeofenceService
 
 GeofenceRouter = APIRouter(prefix="/geofences", tags=["Geofences"])
 DBSessionDep = Annotated[AsyncSession, Depends(get_db_session)]
 authenticate_admin = Annotated[dict, Depends(authenticate_admin_user)]
+authenticate_student = Annotated[dict, Depends(authenticate_student_user)]
 
 
 @GeofenceRouter.post("/create_geofence")
@@ -18,9 +23,10 @@ async def create_geofence(
     geofence: GeofenceCreateModel, session: DBSessionDep, admin: authenticate_admin
 ):
     geofenceService = GeofenceService(session)
-    return await geofenceService.create_geofence(geofence.name, admin["user_matric"], geofence)
+    return await geofenceService.create_geofence(admin["user_matric"], geofence)
 
-@GeofenceRouter.get("/get_geofence", dependencies= [Depends(authenticate_admin_user)])
+
+@GeofenceRouter.get("/get_geofence", dependencies=[Depends(authenticate_admin_user)])
 async def get_geofence_details(
     course_title: str, date: datetime, session: DBSessionDep
 ):
@@ -29,12 +35,16 @@ async def get_geofence_details(
     geofence = await geofenceService.get_geofence(course_title, date)
     return {"geofence": geofence}
 
-@GeofenceRouter.get("/get_geofences", dependencies= [Depends(authenticate_user_by_session_token)])
+
+@GeofenceRouter.get(
+    "/get_geofences", dependencies=[Depends(authenticate_user_by_session_token)]
+)
 async def get_geofences(session: DBSessionDep):
     """Returns all the geofences created"""
     geofenceService = GeofenceService(session)
     geofences = await geofenceService.get_all_geofences()
     return {"geofences": geofences}
+
 
 @GeofenceRouter.get("/get_my_geofences")
 async def get_my_geofences_created(session: DBSessionDep, admin: authenticate_admin):
@@ -42,6 +52,22 @@ async def get_my_geofences_created(session: DBSessionDep, admin: authenticate_ad
     geofenceService = GeofenceService(session)
     geofences = await geofenceService.get_all_geofences(admin["user_matric"])
     return {"geofences": geofences}
+
+
+@GeofenceRouter.post("/record_attendance")
+async def record_attendance(
+    session: DBSessionDep,
+    fence_code: str,
+    lat: float,
+    long: float,
+    student: authenticate_student,
+):
+    geofenceService = GeofenceService(session)
+    recorded_attendance_message = geofenceService.record_geofence_attendance(
+        fence_code=fence_code, user_matric=student["user_matric"], lat=lat, long=long
+    )
+
+    return await recorded_attendance_message
 
 
 @GeofenceRouter.get("/get_attendances")
@@ -55,3 +81,15 @@ async def get_geofence_attendances(
     )
 
     return {"attendance": attendances}
+
+
+@GeofenceRouter.put("/deactivate")
+async def deactivate_geofence(
+    session: DBSessionDep, admin: authenticate_admin, geofence_name: str, date: datetime
+):
+    geofenceService = GeofenceService(session)
+    deactivate_message = await geofenceService.deactivate_geofence(
+        geofence_name, date, admin["user_matric"]
+    )
+
+    return deactivate_message
