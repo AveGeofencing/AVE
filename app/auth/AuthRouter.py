@@ -40,7 +40,7 @@ async def login(
         key="session_token",
         value=session_token,
         httponly=True,
-        secure=False,  # Set to True for HTTPS
+        secure=True,  # Set to True for HTTPS
         samesite="None",
         max_age=SESSION_TIMEOUT_MINUTES * 60,
     )
