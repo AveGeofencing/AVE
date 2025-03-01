@@ -1,5 +1,6 @@
 import uuid
 from zoneinfo import ZoneInfo
+import logging
 
 from fastapi import HTTPException
 from datetime import datetime, timedelta
@@ -10,6 +11,8 @@ from ...utils.config import settings
 
 bcrypt_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 WANT_SINGLE_SIGNIN_FLAG = settings.WANT_SINGLE_SIGNIN
+
+logger = logging.getLogger("uvicorn")
 
 
 class SessionHandler:
@@ -74,9 +77,8 @@ class SessionHandler:
         try:
             await self.sessionRepository.deactivate_session(session_token)
         except Exception as e:
-            raise HTTPException(
-                status_code=500, detail=f"Failed to deactivate session: {str(e)}"
-            )
+            logger.error(e)
+            raise HTTPException(status_code=500, detail=f"Failed to deactivate session")
 
         return "Logged out successfully"
 

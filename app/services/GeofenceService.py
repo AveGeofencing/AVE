@@ -42,7 +42,6 @@ class GeofenceService:
         start_time_utc = geofence.start_time.astimezone(ZoneInfo("UTC"))
         end_time_utc = geofence.end_time.astimezone(ZoneInfo("UTC"))
         NOW = datetime.now(ZoneInfo("UTC"))
-
         if start_time_utc >= end_time_utc:
             raise HTTPException(
                 status_code=400,

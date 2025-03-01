@@ -4,7 +4,7 @@ from zoneinfo import ZoneInfo
 from sqlalchemy import and_, func
 from sqlalchemy.orm import selectinload
 from ..models import Geofence, AttendanceRecord
-from ..schemas import AttendanceRecordModel
+from ..schemas import AttendanceRecordModel, GeofenceCreateModel
 
 from sqlalchemy.future import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -16,7 +16,7 @@ class GeofenceRepository:
 
     async def create_geofence(
         self,
-        geofence: Geofence,
+        geofence: GeofenceCreateModel,
         fence_code: str,
         creator_matric: str,
         start_time_utc,
@@ -33,7 +33,7 @@ class GeofenceRepository:
             fence_type=geofence.fence_type,
             start_time=start_time_utc,
             end_time=end_time_utc,
-            status=("active" if start_time_utc <= NOW <= end_time_utc else "scheduled"),
+            status=("active" if start_time_utc >= NOW <= end_time_utc else "scheduled"),
             time_created=NOW,
         )
 
