@@ -102,7 +102,7 @@ class GeofenceService:
             if geofence and geofence.student_attendances:
                 return geofence.student_attendances
             else:
-                raise HTTPException(status_code=404, detail="No attendances yet.")
+                return
 
         except Exception as e:
             logger.error(f"Something went wrong in fetching geofence attendances")
