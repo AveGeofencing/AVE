@@ -3,19 +3,25 @@ from typing import Annotated, Optional
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..schemas import GeofenceCreateModel
+from ..schemas import GeofenceCreateModel, AttendanceRecordModel
 from ..database import get_db_session
 from ..dependencies.sessionDependencies import (
     authenticate_admin_user,
     authenticate_student_user,
     authenticate_user_by_session_token,
 )
-from ..services.GeofenceService import GeofenceService
+from ..services import GeofenceService, UserService
 
-GeofenceRouter = APIRouter(prefix="/geofences", tags=["Geofences"])
 DBSessionDep = Annotated[AsyncSession, Depends(get_db_session)]
 authenticate_admin = Annotated[dict, Depends(authenticate_admin_user)]
 authenticate_student = Annotated[dict, Depends(authenticate_student_user)]
+
+
+def get_geofence_service(session: DBSessionDep):
+    return GeofenceService(session)
+
+
+GeofenceRouter = APIRouter(prefix="/geofences", tags=["Geofences"])
 
 
 @GeofenceRouter.post("/create_geofence")
@@ -57,14 +63,15 @@ async def get_my_geofences_created(session: DBSessionDep, admin: authenticate_ad
 @GeofenceRouter.post("/record_attendance")
 async def record_attendance(
     session: DBSessionDep,
-    fence_code: str,
-    lat: float,
-    long: float,
+    attendance: AttendanceRecordModel,
     student: authenticate_student,
 ):
     geofenceService = GeofenceService(session)
+    userService = UserService(session)
     recorded_attendance_message = geofenceService.record_geofence_attendance(
-        fence_code=fence_code, user_matric=student["user_matric"], lat=lat, long=long
+        user_matric=student["user_matric"],
+        attendance=attendance,
+        userService=userService,
     )
 
     return await recorded_attendance_message
