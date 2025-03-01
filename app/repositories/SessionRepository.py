@@ -36,12 +36,21 @@ class SessionRepository:
 
         return result.scalars().first()
 
-    async def create_new_session(self, session_token, EXPIRES_AT, user_matric: str):
+    async def create_new_session(
+        self,
+        session_token,
+        EXPIRES_AT,
+        user_matric: str,
+        created_at: datetime,
+        updated_at: datetime,
+    ):
 
         new_session = Session(
             user_id=user_matric,
             token=session_token,
             expires_at=EXPIRES_AT,
+            created_at=created_at,
+            updated_at=updated_at,
         )
 
         self.db_session.add(new_session)

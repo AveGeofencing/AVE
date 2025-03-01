@@ -6,10 +6,11 @@ from datetime import datetime, timedelta
 from sqlalchemy.ext.asyncio import AsyncSession
 from ...repositories import SessionRepository
 from passlib.context import CryptContext
-from ...utils.config import settings 
+from ...utils.config import settings
 
 bcrypt_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 WANT_SINGLE_SIGNIN_FLAG = settings.WANT_SINGLE_SIGNIN
+
 
 class SessionHandler:
     def __init__(self, db_session: AsyncSession):
@@ -45,13 +46,18 @@ class SessionHandler:
                 )
 
             return existing_user_session.token
-            
-        
+
+        NOW = datetime.now(ZoneInfo("UTC"))
+
         EXPIRES_AT = datetime.now(tz=ZoneInfo("Africa/Lagos")) + timedelta(days=1)
         session_token = str(uuid.uuid4())  # Generate a unique session token
-        
+
         token = await self.sessionRepository.create_new_session(
-            session_token=session_token, EXPIRES_AT=EXPIRES_AT, user_matric=user_matric
+            session_token=session_token,
+            EXPIRES_AT=EXPIRES_AT,
+            user_matric=user_matric,
+            created_at=NOW,
+            updated_at=NOW,
         )
         return token
 
