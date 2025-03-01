@@ -1,9 +1,12 @@
 import logging
 from typing import Optional
 from zoneinfo import ZoneInfo
-from app.repositories import PasswordResetTokenRepository, SessionRepository
-from ..schemas.UserSchema import UserCreateModel
-from ..repositories.UserRepository import UserRepository
+from ..repositories import (
+    PasswordResetTokenRepository,
+    SessionRepository,
+    UserRepository,
+)
+from ..schemas import UserCreateModel
 from .EmailService import send_email
 
 from sqlalchemy.ext.asyncio import AsyncSession

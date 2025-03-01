@@ -7,8 +7,7 @@ from zoneinfo import ZoneInfo
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import Geofence, AttendanceRecord
-from app.schemas.GeofenceSchema import GeofenceCreateModel
+from ..schemas import GeofenceCreateModel, AttendanceRecordModel
 
 from ..services import UserService
 from ..repositories import GeofenceRepository
@@ -44,10 +43,6 @@ class GeofenceService:
         end_time_utc = geofence.end_time.astimezone(ZoneInfo("UTC"))
         NOW = datetime.now(ZoneInfo("UTC"))
 
-        logger.info(f"start_time_utc.tz_info: {start_time_utc.tzinfo}")
-        logger.info(f"end_time_utc.tz_info: {end_time_utc.tzinfo}")
-        logger.info(f"NOW.tzinfo: {NOW.tzinfo}")
-
         if start_time_utc >= end_time_utc:
             raise HTTPException(
                 status_code=400,
@@ -59,21 +54,9 @@ class GeofenceService:
                 status_code=400, detail="End time cannot be in the past."
             )
 
-        new_geofence = Geofence(
-            fence_code=fence_code,
-            name=geofence.name,
-            creator_matric=creator_matric,
-            latitude=geofence.latitude,
-            longitude=geofence.longitude,
-            radius=geofence.radius,
-            fence_type=geofence.fence_type,
-            start_time=start_time_utc,
-            end_time=end_time_utc,
-            status=("active" if start_time_utc <= NOW <= end_time_utc else "scheduled"),
-            time_created=NOW,
+        added_geofence = await self.geofenceRepository.create_geofence(
+            geofence, fence_code, creator_matric, start_time_utc, end_time_utc, NOW
         )
-
-        added_geofence = await self.geofenceRepository.create_geofence(new_geofence)
 
         return {"Code": fence_code, "name": added_geofence.name}
 
@@ -91,18 +74,18 @@ class GeofenceService:
         try:
             geofence = await self.geofenceRepository.get_geofence(course_title, date)
             if geofence:
-                print(geofence.start_time.tzinfo)
-                # geofence.start_time = geofence.start_time.astimezone(ZoneInfo("Africa/Lagos"))
-                # geofence.end_time = geofence.end_time.astimezone(ZoneInfo("Africa/Lagos"))
                 return geofence
             else:
-                raise HTTPException(status_code=404, detail="No geofence found")
+                raise HTTPException(
+                    status_code=404,
+                    detail=f"No geofence found with name {course_title} at date {date}",
+                )
         except Exception as e:
             logger.error(f"Something went wrong in fetching geofence")
             logger.error(str(e))
 
             raise HTTPException(
-                status_code=500, detail="Internal Error. Contact admin."
+                status_code=500, detail="Something went wrong. Contact admin."
             )
 
     async def get_geofence_attendances(
@@ -118,7 +101,6 @@ class GeofenceService:
         try:
             if geofence and geofence.student_attendances:
                 return geofence.student_attendances
-
             else:
                 raise HTTPException(status_code=404, detail="No attendances yet.")
 
@@ -127,21 +109,26 @@ class GeofenceService:
             logger.error(str(e))
 
             raise HTTPException(
-                status_code=500, detail="Internal error. Contact admin."
+                status_code=500, detail="Something went wrong. Contact admin."
             )
 
     async def record_geofence_attendance(
-        self, fence_code: str, lat: float, long: float, user_matric: str
+        self,
+        attendance: AttendanceRecordModel,
+        user_matric: str,
+        userService: UserService,
     ):
-        userService = UserService(self.session)
         user = await userService.get_user_by_email_or_matric(matric=user_matric)
         if not user:
             raise HTTPException(status_code=404, detail="User not found.")
 
-        geofence = await self.geofenceRepository.get_geofence_by_fence_code(fence_code)
+        geofence = await self.geofenceRepository.get_geofence_by_fence_code(
+            attendance.fence_code
+        )
         if not geofence:
             raise HTTPException(
-                status_code=404, detail=f"Invalid fence code: {fence_code}"
+                status_code=404,
+                detail=f"Invalid fence code: {attendance.fence_code}",
             )
 
         if geofence.status.lower() != "active":
@@ -159,22 +146,21 @@ class GeofenceService:
                 detail="You have already recorded attendance for this class",
             )
 
-        if not check_user_in_circular_geofence(lat, long, geofence):
+        if not check_user_in_circular_geofence(
+            attendance.lat, attendance.long, geofence
+        ):
             raise HTTPException(
                 status_code=403,
                 detail="User is not within geofence, attendance not recorded",
             )
         try:
 
-            new_attendance = AttendanceRecord(
+            await self.geofenceRepository.record_geofence_attendance(
+                attendance=attendance,
                 user_matric=user["user_matric"],
-                fence_code=fence_code,
                 geofence_name=geofence.name,
-                timestamp=datetime.now(ZoneInfo("UTC")),
                 matric_fence_code=matric_fence_code,
             )
-
-            await self.geofenceRepository.record_geofence_attendance(new_attendance)
             return {"message": "Attendance recorded successfully"}
         except Exception as e:
             logger.error(e)
@@ -195,14 +181,11 @@ class GeofenceService:
                 status_code=401,
                 detail="You don't have permission to delete this class as you are not the creator.",
             )
-
         try:
-            geofence.status = "inactive"
-            self.session.add(geofence)
-            await self.session.commit()
-            await self.session.refresh(geofence)
-
+            await self.geofenceRepository.deactivate_geofence(
+                geofence_name=geofence.name, date=date
+            )
             return {"message": "Geofence deactivated successfully"}
         except Exception as e:
-            await self.session.rollback()  # Rollback in case of error
-            raise HTTPException(status_code=500, detail=str(e))
+            logger.error(str(e))
+            raise HTTPException(status_code=500, detail="Something went wrong")
