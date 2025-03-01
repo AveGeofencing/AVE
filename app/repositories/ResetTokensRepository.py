@@ -3,7 +3,7 @@ from sqlalchemy import select, or_, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import or_
 
-from app.models import PasswordResetToken
+from ..models import PasswordResetToken
 
 
 class PasswordResetTokenRepository:
@@ -35,7 +35,7 @@ class PasswordResetTokenRepository:
     async def add_token(
         self, user_id: str, token: str, expires_at
     ) -> PasswordResetToken:
-        
+
         new_token = PasswordResetToken(
             user_id=user_id, token=token, expires_at=expires_at
         )

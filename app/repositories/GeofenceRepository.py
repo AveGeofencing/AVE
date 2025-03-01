@@ -4,6 +4,7 @@ from zoneinfo import ZoneInfo
 from sqlalchemy import and_, func
 from sqlalchemy.orm import selectinload
 from ..models import Geofence, AttendanceRecord
+from ..schemas import AttendanceRecordModel
 
 from sqlalchemy.future import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -13,8 +14,28 @@ class GeofenceRepository:
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def create_geofence(self, geofence: Geofence):
-        new_geofence = geofence
+    async def create_geofence(
+        self,
+        geofence: Geofence,
+        fence_code: str,
+        creator_matric: str,
+        start_time_utc,
+        end_time_utc,
+        NOW,
+    ):
+        new_geofence = Geofence(
+            fence_code=fence_code,
+            name=geofence.name,
+            creator_matric=creator_matric,
+            latitude=geofence.latitude,
+            longitude=geofence.longitude,
+            radius=geofence.radius,
+            fence_type=geofence.fence_type,
+            start_time=start_time_utc,
+            end_time=end_time_utc,
+            status=("active" if start_time_utc <= NOW <= end_time_utc else "scheduled"),
+            time_created=NOW,
+        )
 
         self.session.add(new_geofence)
         await self.session.commit()
@@ -63,7 +84,20 @@ class GeofenceRepository:
         geofence = result.scalars().one_or_none()
         return geofence
 
-    async def record_geofence_attendance(self, attendance: AttendanceRecord):
+    async def record_geofence_attendance(
+        self,
+        attendance: AttendanceRecordModel,
+        user_matric: str,
+        geofence_name: str,
+        matric_fence_code: str,
+    ):
+        attendance = AttendanceRecord(
+            user_matric=user_matric,
+            fence_code=attendance.fence_code,
+            geofence_name=geofence_name,
+            timestamp=datetime.now(ZoneInfo("UTC")),
+            matric_fence_code=matric_fence_code,
+        )
         self.session.add(attendance)
         await self.session.commit()
         await self.session.refresh(attendance)
@@ -78,3 +112,12 @@ class GeofenceRepository:
         attendance_record = result.scalars().one_or_none()
 
         return attendance_record
+
+    async def deactivate_geofence(self, geofence_name: str, date: datetime):
+        geofence = await self.get_geofence(course_title=geofence_name, date=date)
+
+        geofence.status = "inactive"
+
+        self.session.add(geofence)
+        await self.session.commit()
+        await self.session.refresh()

@@ -1,7 +1,7 @@
 from ..models import Session, User
+
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import and_, delete, or_
-from ..models import Session
 from datetime import datetime
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
@@ -11,24 +11,18 @@ class SessionRepository:
     def __init__(self, db_session: AsyncSession):
         self.db_session = db_session
 
-    async def get_user_by_email_or_matric(
-        self, email: str = None, matric: str = None
-    ):
+    async def get_user_by_email_or_matric(self, email: str = None, matric: str = None):
         stmt = select(User).filter(or_(User.email == email, User.user_matric == matric))
         result = await self.db_session.execute(stmt)
         user = result.scalars().first()
 
         return user
-    
+
     async def get_user_session_by_token(self, session_token):
         stmt = (
             select(Session)
             .options(selectinload(Session.user))
-            .filter(
-                and_(
-                    Session.token == session_token, Session.is_expired == False
-                )
-            )
+            .filter(and_(Session.token == session_token, Session.is_expired == False))
         )
 
         result = await self.db_session.execute(stmt)
@@ -60,7 +54,7 @@ class SessionRepository:
         await self.db_session.execute(stmt)
         await self.db_session.commit()
 
-    async def deactivate_all_user_sessions(self, user_matric:str):
+    async def deactivate_all_user_sessions(self, user_matric: str):
         stmt = delete(Session).filter(Session.user_id == user_matric)
-        await self.db_session.execute(stmt)        
+        await self.db_session.execute(stmt)
         await self.db_session.commit()

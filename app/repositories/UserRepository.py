@@ -1,7 +1,6 @@
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
 
-from app.models import AttendanceRecord
 from ..schemas.UserSchema import UserCreateModel
 from ..models import User
 from sqlalchemy.ext.asyncio import AsyncSession
