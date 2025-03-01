@@ -21,7 +21,7 @@ def get_geofence_service(session: DBSessionDep):
     return GeofenceService(session)
 
 
-GeofenceRouter = APIRouter(prefix="/geofences", tags=["Geofences"])
+GeofenceRouter = APIRouter(prefix="/geofence", tags=["Geofences"])
 
 
 @GeofenceRouter.post("/create_geofence")
