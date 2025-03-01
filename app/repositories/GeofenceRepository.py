@@ -120,4 +120,4 @@ class GeofenceRepository:
 
         self.session.add(geofence)
         await self.session.commit()
-        await self.session.refresh()
+        await self.session.refresh(geofence)
