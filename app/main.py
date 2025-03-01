@@ -3,11 +3,9 @@ from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
-from app.routers import GeofenceRouter, StudentRouter
-from app.utils.APIKeys import get_api_key
+from .utils.APIKeys import get_api_key
 
-from .routers import AdminRouter
-from .routers import GeneralUserRouter
+from .routers import *
 from .database import sessionmanager, Base
 from .auth.AuthRouter import AuthRouter
 
@@ -28,8 +26,6 @@ async def lifespan(app: FastAPI):
         await sessionmanager.close()
 
 
-api_key_dependency = Annotated[str, Depends(get_api_key)]
-
 app = FastAPI(
     title="Ave Geofencing",
     description="A smart solution for student attendance",
@@ -44,7 +40,7 @@ origins = [
     "http://127.0.0.1:3000",
     "https://ave-po7b.onrender.com",
     "https://368f-102-88-108-70.ngrok-free.app",
-    "https://mw487dl1-8000.uks1.devtunnels.ms"
+    "https://mw487dl1-8000.uks1.devtunnels.ms",
 ]
 app.add_middleware(
     CORSMiddleware,
@@ -55,7 +51,7 @@ app.add_middleware(
 )
 
 
-@app.get("/", dependencies=[Depends(get_api_key)])
+@app.get("/")
 async def index():
     return "Hello World 1"
 
