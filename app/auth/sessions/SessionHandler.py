@@ -49,7 +49,7 @@ class SessionHandler:
 
         NOW = datetime.now(ZoneInfo("UTC"))
 
-        EXPIRES_AT = datetime.now(tz=ZoneInfo("Africa/Lagos")) + timedelta(days=1)
+        EXPIRES_AT = NOW + timedelta(days=1)
         session_token = str(uuid.uuid4())  # Generate a unique session token
 
         token = await self.sessionRepository.create_new_session(
