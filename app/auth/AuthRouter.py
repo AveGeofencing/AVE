@@ -85,7 +85,3 @@ async def get_user_by_session_token(request: Request, session: DBSessionDep):
         raise HTTPException(status_code=401, detail="Session expired")
     return user_data
 
-
-##TODO: Handle the case where token is tampered with before login out,
-# in which case the token would be tampered with and not be found on the database to begin with,
-# and hence wouldn't be able to be logged out, and won't be able to be logged in again either.
