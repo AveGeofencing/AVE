@@ -33,7 +33,11 @@ class GeofenceRepository:
             fence_type=geofence.fence_type,
             start_time=start_time_utc,
             end_time=end_time_utc,
-            status=("active" if start_time_utc >= NOW <= end_time_utc else "scheduled"),
+            status=(
+                "scheduled"
+                if NOW < start_time_utc
+                else "active" if start_time_utc <= NOW < end_time_utc else "inactive"
+            ),
             time_created=NOW,
         )
 
