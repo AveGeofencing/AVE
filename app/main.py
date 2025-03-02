@@ -36,11 +36,9 @@ app = FastAPI(
 origins = [
     "http://127.0.0.0:3000",
     "http://localhost:3000",
-    "https://ave-self.vercel.app",
+    "https://ave-main.onrender.com",
     "http://127.0.0.1:3000",
-    "https://ave-po7b.onrender.com",
-    "https://368f-102-88-108-70.ngrok-free.app",
-    "https://mw487dl1-8000.uks1.devtunnels.ms",
+    "https://ave-po7b.onrender.com"
 ]
 app.add_middleware(
     CORSMiddleware,
