@@ -8,6 +8,7 @@ from ..repositories import (
 )
 from ..schemas import UserCreateModel
 from .EmailService import send_email
+from ..utils.config import settings
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import BackgroundTasks, HTTPException
@@ -180,7 +181,7 @@ class UserService:
             logger.error(str(e))
             raise HTTPException(status_code=500, detail="Internal server error")
 
-        reset_link = f"http://localhost:3000/user/student/reset_password?token={token}"
+        reset_link = f"{settings.BASE_URL}user/student/reset_password?token={token}"
         body = f"""
             <html>
                <body>

@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     echo_sql: bool = False
     API_KEYS: str
     WANT_SINGLE_SIGNIN: bool
-
+    BASE_URL: str
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
 class EmailSettings(BaseSettings):
