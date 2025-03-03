@@ -110,7 +110,7 @@ class UserService:
             "username": username,
             "user_matric": user_matric,
         }
-        expires = datetime.now(tz=ZoneInfo("Africa/Lagos")) + expires_delta
+        expires = datetime.now(tz=ZoneInfo("UTC")) + expires_delta
         data_to_encode.update({"exp": expires})
         token = jwt.encode(
             data_to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM
@@ -168,11 +168,17 @@ class UserService:
         user = await self.get_user_by_email_or_matric(email=user_email)
 
         # go on if user exists
-        token = await self.__generate_password_reset_token(
-            email=user["user_email"],
-            username=user["user_username"],
-            user_matric=user["user_matric"],
-        )
+        try:
+            token = await self.__generate_password_reset_token(
+                email=user["user_email"],
+                username=user["user_username"],
+                user_matric=user["user_matric"],
+            )
+        except Exception as e:
+            logger.error(f"Something went wrong in sending password reset email")
+            logger.error(str(e))
+            raise HTTPException(status_code=500, detail="Internal server error")
+
         reset_link = f"http://localhost:8000/user/student/reset_password?token={token}"
         body = f"""
             <html>
@@ -239,4 +245,6 @@ class UserService:
             return change_password_message
 
         except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Internal Server Error {e}")
+            logger.error("Something went wrong in changing password")
+            logger.error(str(e))
+            raise HTTPException(status_code=500, detail=f"Something went wrong")
