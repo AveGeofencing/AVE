@@ -163,10 +163,11 @@ class UserService:
             )
 
     async def send_reset_password_email(
-        self, user_email: dict, background_tasks: BackgroundTasks
+        self, user_email: dict, baseUrl:str, background_tasks: BackgroundTasks
     ):
         user = await self.get_user_by_email_or_matric(email=user_email)
-
+        if user is None:
+            return
         # go on if user exists
         try:
             token = await self.__generate_password_reset_token(
@@ -179,7 +180,7 @@ class UserService:
             logger.error(str(e))
             raise HTTPException(status_code=500, detail="Internal server error")
 
-        reset_link = f"http://localhost:8000/user/student/reset_password?token={token}"
+        reset_link = f"{baseUrl}user/student/reset_password?token={token}"
         body = f"""
             <html>
                <body>

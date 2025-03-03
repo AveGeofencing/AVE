@@ -1,5 +1,5 @@
 from typing import Annotated
-from fastapi import APIRouter, BackgroundTasks, Depends
+from fastapi import APIRouter, BackgroundTasks, Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.utils.APIKeys import get_api_key
@@ -25,11 +25,16 @@ async def create_new_user(
 
 @GeneralUserRouter.post("/forgot_password")
 async def forgot_password(
-    session: DBSessionDep, student_email: str, background_tasks: BackgroundTasks
+    session: DBSessionDep,
+    student_email: str,
+    background_tasks: BackgroundTasks,
+    request: Request,
 ):
     userService = UserService(session)
     await userService.send_reset_password_email(
-        user_email=student_email, background_tasks=background_tasks
+        user_email=student_email,
+        baseUrl=str(request.base_url),
+        background_tasks=background_tasks,
     )
     return {"message": "Password reset email has been sent successfully"}
 
