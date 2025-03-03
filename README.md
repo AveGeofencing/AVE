@@ -2,7 +2,7 @@
 
 ## Description
 
-The Geofence System is a startup built and maintained by me and my roommate Daniel ([https://github.com/ELECTRON11111]). This is the backend API built with FastAPI and SQLAlchemy that enables users to create, manage, and track geofences. It allows students to join geofences, record attendance, and provides real-time updates.
+AveGeofencing is a startup built and maintained by me and my roommate Daniel ([https://github.com/ELECTRON11111]). This is the backend API built with FastAPI and SQLAlchemy that enables users to create, manage, and track geofences. It allows students to join geofences, record attendance, and provides real-time updates.
 
 ## Features
 
