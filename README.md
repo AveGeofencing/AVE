@@ -1,8 +1,8 @@
-# Geofence System
+# Ave Geofence System
 
 ## Description
 
-The Geofence System is a backend API built with FastAPI and SQLAlchemy that enables users to create, manage, and track geofences. It allows students to join geofences, record attendance, and provides real-time updates.
+The Geofence System is a startup built and maintained by me and my roommate Daniel ([https://github.com/ELECTRON11111]). This is the backend API built with FastAPI and SQLAlchemy that enables users to create, manage, and track geofences. It allows students to join geofences, record attendance, and provides real-time updates.
 
 ## Features
 
@@ -10,8 +10,9 @@ The Geofence System is a backend API built with FastAPI and SQLAlchemy that enab
 - Students can join geofences using a code.
 - Attendance tracking for students within a geofence.
 - Real-time updates on students joining geofences.
-- Secure authentication and authorization.
+- Secure authentication and authorization. Session management with cookies.
 - Data persistence using MySQL with SQLAlchemy ORM.
+- Users can request for reset password emails to reset their passwords.
 
 ## Technologies Used
 
