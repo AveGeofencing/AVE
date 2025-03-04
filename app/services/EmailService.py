@@ -15,14 +15,17 @@ conf = ConnectionConfig(
     MAIL_SSL_TLS=email_settings.MAIL_SSL_TLS,
 )
 
+
 # Send Email Function
-async def send_email(subject: str, recipients: list, body: dict, template_name: str = None):
+async def send_email(
+    subject: str, recipients: list, body: dict, template_name: str = None
+):
     try:
         message = MessageSchema(
             subject=subject,
             recipients=recipients,  # List of recipients
             body=body,
-            subtype="html",  
+            subtype="html",
         )
         fm = FastMail(conf)
         await fm.send_message(message, template_name=template_name)

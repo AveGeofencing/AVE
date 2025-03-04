@@ -72,7 +72,9 @@ class SessionHandler:
             raise HTTPException(status_code=401, detail="Token expired or invalid")
 
         if session_state.is_expired:
-            raise HTTPException(status_code=401, detail="Session has expired. Login again.")
+            raise HTTPException(
+                status_code=401, detail="Session has expired. Login again."
+            )
 
         try:
             await self.sessionRepository.deactivate_session(session_token)

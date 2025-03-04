@@ -1,6 +1,7 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import EmailStr
 
+
 class Settings(BaseSettings):
     DATABASE_URL: str
     SECRET_KEY: str
@@ -10,6 +11,7 @@ class Settings(BaseSettings):
     WANT_SINGLE_SIGNIN: bool
     BASE_URL: str
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+
 
 class EmailSettings(BaseSettings):
     MAIL_USERNAME: str
@@ -21,7 +23,6 @@ class EmailSettings(BaseSettings):
     MAIL_SSL_TLS: bool
     USE_CREDENTIALS: bool
     VALIDATE_CERTS: bool
-
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 

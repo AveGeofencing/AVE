@@ -1,7 +1,6 @@
 from pydantic import BaseModel, Field, AwareDatetime
 
 
-
 class GeofenceCreateModel(BaseModel):
     name: str
     latitude: float

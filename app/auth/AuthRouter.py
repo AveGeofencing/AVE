@@ -84,4 +84,3 @@ async def get_user_by_session_token(request: Request, session: DBSessionDep):
     if not user_data:
         raise HTTPException(status_code=401, detail="Session expired")
     return user_data
-

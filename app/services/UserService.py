@@ -1,13 +1,15 @@
 import logging
 from typing import Optional
 from zoneinfo import ZoneInfo
+
+from .EmailService import send_email
 from ..repositories import (
     PasswordResetTokenRepository,
     SessionRepository,
     UserRepository,
 )
 from ..schemas import UserCreateModel
-from .EmailService import send_email
+from ..utils.config import settings
 from ..utils.config import settings
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -16,7 +18,6 @@ from passlib.context import CryptContext
 from pydantic import EmailStr
 from datetime import timedelta, datetime
 from jose import JWTError, jwt
-from ..utils.config import settings
 
 bcrypt_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 logger = logging.getLogger("uvicorn")
@@ -40,10 +41,9 @@ class UserService:
             user_create_message = await self.repository.create_new_user(
                 user_data, hashed_password
             )
+            return user_create_message
         except:
             raise HTTPException(status_code=500, detail="Internal Server Error")
-
-        return user_create_message
 
     async def get_user_by_email_or_matric(self, email: str = None, matric: str = None):
         user = await self.repository.get_user_by_email_or_matric(email, matric)
@@ -164,7 +164,7 @@ class UserService:
             )
 
     async def send_reset_password_email(
-        self, user_email: dict, baseUrl: str, background_tasks: BackgroundTasks
+        self, user_email: dict, background_tasks: BackgroundTasks
     ):
         user = await self.get_user_by_email_or_matric(email=user_email)
         if user is None:
@@ -176,38 +176,37 @@ class UserService:
                 username=user["user_username"],
                 user_matric=user["user_matric"],
             )
+            reset_link = f"{settings.BASE_URL}user/student/reset_password?token={token}"
+            body = f"""
+                <html>
+                <body>
+                    <h3>
+                        Hi {user["user_username"]},
+                    </h3>
+                    <p>
+                        We received a request to reset your password. Click the link below to reset it: <br>{reset_link}
+
+                        <br><br> This link will expire in 20 minutes.
+                        <br>If you didn't request this, you can safely ignore this email.
+
+                        <br><br><br>
+                        Thanks,<br>
+                        Ave Geofencing.
+                    </p>
+                </body> 
+                </html>
+                """
+
+            background_tasks.add_task(
+                send_email,
+                subject="Password Reset Request",
+                recipients=[user["user_email"]],
+                body=body,
+            )
         except Exception as e:
             logger.error(f"Something went wrong in sending password reset email")
             logger.error(str(e))
             raise HTTPException(status_code=500, detail="Internal server error")
-
-        reset_link = f"{settings.BASE_URL}user/student/reset_password?token={token}"
-        body = f"""
-            <html>
-               <body>
-                <h3>
-                    Hi {user["user_username"]},
-                </h3>
-                <p>
-                    We received a request to reset your password. Click the link below to reset it: <br>{reset_link}
-
-                    <br><br> This link will expire in 20 minutes.
-                    <br>If you didn't request this, you can safely ignore this email.
-
-                    <br><br><br>
-                    Thanks,<br>
-                    Ave Geofencing.
-                </p>
-               </body> 
-            </html>
-            """
-
-        background_tasks.add_task(
-            send_email,
-            subject="Password Reset Request",
-            recipients=[user["user_email"]],
-            body=body,
-        )
 
     async def change_password(
         self, new_password, token: str, background_tasks: BackgroundTasks

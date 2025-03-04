@@ -38,7 +38,7 @@ origins = [
     "http://localhost:3000",
     "https://ave-main.onrender.com",
     "http://127.0.0.1:3000",
-    "https://ave-po7b.onrender.com"
+    "https://ave-po7b.onrender.com",
 ]
 app.add_middleware(
     CORSMiddleware,
