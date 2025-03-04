@@ -69,18 +69,17 @@ class SessionHandler:
             session_token
         )
         if session_state is None:
-            raise HTTPException(status_code=404, detail="Token expired or invalid")
+            raise HTTPException(status_code=401, detail="Token expired or invalid")
 
         if session_state.is_expired:
-            raise HTTPException(status_code=401, detail="Session has expired")
+            raise HTTPException(status_code=401, detail="Session has expired. Login again.")
 
         try:
             await self.sessionRepository.deactivate_session(session_token)
+            return "Logged out successfully"
         except Exception as e:
             logger.error(e)
             raise HTTPException(status_code=500, detail=f"Failed to deactivate session")
-
-        return "Logged out successfully"
 
     async def login(self, user_matric: str, password: str, email: str = None):
         existing_user = await self.sessionRepository.get_user_by_email_or_matric(
