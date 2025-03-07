@@ -33,7 +33,6 @@ async def forgot_password(
     userService = UserService(session)
     await userService.send_reset_password_email(
         user_email=student_email,
-        baseUrl=str(request.base_url),
         background_tasks=background_tasks,
     )
     return {"message": "Password reset email has been sent successfully"}

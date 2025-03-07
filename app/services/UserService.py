@@ -52,12 +52,10 @@ class UserService:
             )
 
     async def get_user_by_email_or_matric(self, email: str = None, matric: str = None):
+        user = await self.repository.get_user_by_email_or_matric(email, matric)
+        if user is None:
+            return
         try:
-            user = await self.repository.get_user_by_email_or_matric(email, matric)
-
-            if user is None:
-                raise HTTPException(status_code=404, detail="User does not exist")
-
             return {
                 "user_username": user.username,
                 "user_matric": user.user_matric,
@@ -65,8 +63,7 @@ class UserService:
                 "user_role": user.role,
                 "user_attendances": user.attendances,
             }
-        except HTTPException:
-            raise
+
         except Exception as e:
             logger.error("Something went wrong in fetching user records")
             logger.error(e)
@@ -130,8 +127,6 @@ class UserService:
 
             return token
 
-        except HTTPException:
-            raise
         except Exception as e:
             logger.error("Something went wrong in generating password reset token")
             logger.error(str(e))
@@ -184,10 +179,10 @@ class UserService:
     async def send_reset_password_email(
         self, user_email: dict, background_tasks: BackgroundTasks
     ):
+        user = await self.get_user_by_email_or_matric(email=user_email)
+        if user is None:
+            return
         try:
-            user = await self.get_user_by_email_or_matric(email=user_email)
-            if user is None:
-                return
             # go on if user exists
             token = await self.__generate_password_reset_token(
                 email=user["user_email"],
@@ -221,8 +216,6 @@ class UserService:
                 recipients=[user["user_email"]],
                 body=body,
             )
-        except HTTPException:
-            raise
         except Exception as e:
             logger.error(f"Something went wrong in sending password reset email")
             logger.error(str(e))
