@@ -1,6 +1,9 @@
 from fastapi import HTTPException, Security
 from fastapi.security import APIKeyHeader
 from .config import settings
+import logging
+
+logger = logging.getLogger("uvicorn")
 
 API_KEYS = settings.API_KEYS.split(",")
 api_key_header = APIKeyHeader(name="x-api-key", auto_error=False)
@@ -21,9 +24,12 @@ def get_api_key(
     Raises:
         HTTPException: If the API key is invalid or missing.
     """
-    if api_key_header in API_KEYS:
-        return api_key_header
-    raise HTTPException(
-        status_code=401,
-        detail="Invalid or missing API Key",
-    )
+    try:
+        if api_key_header in API_KEYS:
+            return api_key_header
+    except Exception as e:
+        logger.error(e)
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid or missing API Key",
+        )

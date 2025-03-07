@@ -1,9 +1,9 @@
 from datetime import datetime
-from typing import Annotated, Optional
+from typing import Annotated, Dict, List, Optional
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..schemas import GeofenceCreateModel, AttendanceRecordModel
+from ..schemas import GeofenceCreateModel, AttendanceRecordModel, AttendanceRecordOut
 from ..database import get_db_session
 from ..dependencies.sessionDependencies import (
     authenticate_admin_user,
@@ -29,11 +29,11 @@ async def create_geofence(
     geofence: GeofenceCreateModel, session: DBSessionDep, admin: authenticate_admin
 ):
     geofenceService = GeofenceService(session)
-    return await geofenceService.create_geofence(admin["user_matric"], geofence)
-
+    fence_code, name =  await geofenceService.create_geofence(admin["user_matric"], geofence)
+    return {"Code": fence_code, "name": name}
 
 @GeofenceRouter.get("/get_geofence", dependencies=[Depends(authenticate_admin_user)])
-async def get_geofence_details(
+async def get_geofence(
     course_title: str, date: datetime, session: DBSessionDep
 ):
     """Returns details of geofence for a given course title"""
@@ -68,23 +68,23 @@ async def record_attendance(
 ):
     geofenceService = GeofenceService(session)
     userService = UserService(session)
-    recorded_attendance_message = geofenceService.record_geofence_attendance(
+    recorded_attendance_message = await geofenceService.record_geofence_attendance(
         user_matric=student["user_matric"],
         attendance=attendance,
         userService=userService,
     )
 
-    return await recorded_attendance_message
+    return {"message" : recorded_attendance_message}
 
 
-@GeofenceRouter.get("/get_attendances")
+@GeofenceRouter.get("/get_attendances", response_model=Dict[str, List[AttendanceRecordOut]])
 async def get_geofence_attendances(
-    course_title: str, date: datetime, admin: authenticate_admin, session: DBSessionDep
+    fence_code, admin: authenticate_admin, session: DBSessionDep
 ):
     """Returns the attendances for a given course"""
     geofenceService = GeofenceService(session)
     attendances = await geofenceService.get_geofence_attendances(
-        course_title, date, admin["user_matric"]
+        fence_code = fence_code, user_id=admin["user_matric"]
     )
 
     return {"attendance": attendances}
@@ -99,4 +99,4 @@ async def deactivate_geofence(
         geofence_name, date, admin["user_matric"]
     )
 
-    return deactivate_message
+    return {"message": deactivate_message}

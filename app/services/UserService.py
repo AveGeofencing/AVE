@@ -29,69 +29,73 @@ class UserService:
         self.repository = UserRepository(session)
 
     async def create_new_user(self, user_data: UserCreateModel):
-        existing_user = await self.repository.get_user_by_email_or_matric(
-            email=user_data.email, matric=user_data.user_matric
-        )
-
-        if existing_user:
-            raise HTTPException(status_code=400, detail="User already exists")
-
         try:
+            existing_user = await self.repository.get_user_by_email_or_matric(
+                email=user_data.email, matric=user_data.user_matric
+            )
+
+            if existing_user:
+                raise HTTPException(status_code=400, detail="User already exists")
+
             hashed_password = bcrypt_context.hash(user_data.password)
             user_create_message = await self.repository.create_new_user(
                 user_data, hashed_password
             )
             return user_create_message
-        except:
-            raise HTTPException(status_code=500, detail="Internal Server Error")
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error("Error creating new user")
+            logger.error(e)
+            raise HTTPException(
+                status_code=500, detail="Something went wrong, contact admin."
+            )
 
     async def get_user_by_email_or_matric(self, email: str = None, matric: str = None):
-        user = await self.repository.get_user_by_email_or_matric(email, matric)
+        try:
+            user = await self.repository.get_user_by_email_or_matric(email, matric)
 
-        if user is None:
-            raise HTTPException(status_code=404, detail="User does not exist")
+            if user is None:
+                raise HTTPException(status_code=404, detail="User does not exist")
 
-        return {
-            "user_username": user.username,
-            "user_matric": user.user_matric,
-            "user_email": user.email,
-            "user_role": user.role,
-            "user_attendances": user.attendances,
-        }
+            return {
+                "user_username": user.username,
+                "user_matric": user.user_matric,
+                "user_email": user.email,
+                "user_role": user.role,
+                "user_attendances": user.attendances,
+            }
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error("Something went wrong in fetching user records")
+            logger.error(e)
+            raise HTTPException(
+                status_code=500, detail="Something went wrong, contact admin."
+            )
 
     async def get_user_records(
         self, user_matric: str, course_title: Optional[str] = None
     ):
-        user = await self.repository.get_user_by_email_or_matric(matric=user_matric)
-        if course_title is None:
-            try:
+        try:
+            user = await self.repository.get_user_by_email_or_matric(matric=user_matric)
+            if course_title is None:
                 if user and user.attendances:
                     return {f"attendance": user.attendances}
 
-                raise HTTPException(
-                    status_code=404,
-                    detail=f"No attendances for user: {user.user_matric}",
-                )
-            except Exception as e:
-                logger.error(f"Something went wrong in fetching user records")
-                logger.error(str(e))
-
-                raise HTTPException(status_code=500, detail=" Internal server error")
-        else:
-            try:
-                if user and user.attendances:
-                    user_attendances = [
-                        attendance
-                        for attendance in user.attendances
-                        if attendance.course_title == course_title
-                    ]
-                    return {f"attendance": user_attendances}
-
-            except Exception as e:
-                logger.error(f"Something went wrong in fetching user records")
-                logger.error(str(e))
-
-                raise HTTPException(status_code=500, detail=" Internal server error")
+            if user and user.attendances:
+                user_attendances = [
+                    attendance
+                    for attendance in user.attendances
+                    if attendance.course_title == course_title
+                ]
+                return {f"attendance": user_attendances}
+        except Exception as e:
+            logger.error("Something went wrong in fetching user records")
+            logger.error(e)
+            raise HTTPException(
+                status_code=500, detail="Something went wrong, contact admin."
+            )
 
     async def __generate_password_reset_token(
         self,
@@ -100,42 +104,50 @@ class UserService:
         user_matric: str,
         expires_delta: timedelta = timedelta(minutes=20),
     ):
-        resetTokenRepo = PasswordResetTokenRepository(self.session)
-        existing_token = await resetTokenRepo.get_token_by_matric(user_matric)
-        if existing_token:
-            await resetTokenRepo.set_token_is_used(user_matric=user_matric)
+        try:
+            resetTokenRepo = PasswordResetTokenRepository(self.session)
+            existing_token = await resetTokenRepo.get_token_by_matric(user_matric)
+            if existing_token:
+                await resetTokenRepo.set_token_is_used(user_matric=user_matric)
 
-        # Data to encode as jwt
-        data_to_encode = {
-            "sub": email,
-            "username": username,
-            "user_matric": user_matric,
-        }
-        expires = datetime.now(tz=ZoneInfo("UTC")) + expires_delta
-        data_to_encode.update({"exp": expires})
-        token = jwt.encode(
-            data_to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM
-        )
+            # Data to encode as jwt
+            data_to_encode = {
+                "sub": email,
+                "username": username,
+                "user_matric": user_matric,
+            }
+            expires = datetime.now(tz=ZoneInfo("UTC")) + expires_delta
+            data_to_encode.update({"exp": expires})
+            token = jwt.encode(
+                data_to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM
+            )
 
-        # Adding generated tokens to database
-        resetTokenRepo = PasswordResetTokenRepository(self.session)
-        await resetTokenRepo.add_token(
-            user_id=user_matric, token=token, expires_at=expires
-        )
+            # Adding generated tokens to database
+            resetTokenRepo = PasswordResetTokenRepository(self.session)
+            await resetTokenRepo.add_token(
+                user_id=user_matric, token=token, expires_at=expires
+            )
 
-        return token
+            return token
+
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error("Something went wrong in generating password reset token")
+            logger.error(str(e))
+            raise HTTPException(status_code=500, detail="Something went wrong")
 
     async def __decode_password_reset_token(self, token: str):
-        # Make sure previously used tokens cannot be reused.
-        resetTokenRepo = PasswordResetTokenRepository(self.session)
-        existing_token = await resetTokenRepo.get_token(token)
-
-        if not existing_token or existing_token.is_used:
-            raise HTTPException(
-                status_code=400,
-                detail="Invalid link. Please request for a new password reset link.",
-            )
         try:
+            # Make sure previously used tokens cannot be reused.
+            resetTokenRepo = PasswordResetTokenRepository(self.session)
+            existing_token = await resetTokenRepo.get_token(token)
+
+            if not existing_token or existing_token.is_used:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Invalid link. Please request for a new password reset link.",
+                )
             payload = jwt.decode(
                 token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
             )
@@ -162,15 +174,21 @@ class UserService:
                 status_code=401,
                 detail="Invalid link. Please request for a new password reset link.",
             )
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error("Something went wrong in decoding password reset token")
+            logger.error(str(e))
+            raise HTTPException(status_code=500, detail="Something went wrong")
 
     async def send_reset_password_email(
         self, user_email: dict, background_tasks: BackgroundTasks
     ):
-        user = await self.get_user_by_email_or_matric(email=user_email)
-        if user is None:
-            return
-        # go on if user exists
         try:
+            user = await self.get_user_by_email_or_matric(email=user_email)
+            if user is None:
+                return
+            # go on if user exists
             token = await self.__generate_password_reset_token(
                 email=user["user_email"],
                 username=user["user_username"],
@@ -203,18 +221,22 @@ class UserService:
                 recipients=[user["user_email"]],
                 body=body,
             )
+        except HTTPException:
+            raise
         except Exception as e:
             logger.error(f"Something went wrong in sending password reset email")
             logger.error(str(e))
-            raise HTTPException(status_code=500, detail="Internal server error")
+            raise HTTPException(
+                status_code=500, detail="Something went wrong, contact admin"
+            )
 
     async def change_password(
         self, new_password, token: str, background_tasks: BackgroundTasks
     ):
-        user = await self.__decode_password_reset_token(token)
-
-        new_hashed_password = bcrypt_context.hash(new_password)
         try:
+            user = await self.__decode_password_reset_token(token)
+
+            new_hashed_password = bcrypt_context.hash(new_password)
             change_password_message = await self.repository.change_user_password(
                 user_email=user["email"], new_hashed_password=new_hashed_password
             )
@@ -245,6 +267,8 @@ class UserService:
             )
             return change_password_message
 
+        except HTTPException:
+            raise
         except Exception as e:
             logger.error("Something went wrong in changing password")
             logger.error(str(e))

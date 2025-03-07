@@ -1,11 +1,11 @@
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-from sqlalchemy import and_, func
-from sqlalchemy.orm import selectinload
 from ..models import Geofence, AttendanceRecord
 from ..schemas import AttendanceRecordModel, GeofenceCreateModel
 
+from sqlalchemy import and_, func
+from sqlalchemy.orm import selectinload
 from sqlalchemy.future import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -108,7 +108,9 @@ class GeofenceRepository:
 
         return attendance
 
-    async def get_attendance_record(self, matric_fence_code: str):
+    async def get_attendance_record_for_student_for_geofence(
+        self, matric_fence_code: str
+    ):
         stmt = select(AttendanceRecord).filter(
             AttendanceRecord.matric_fence_code == matric_fence_code
         )
@@ -125,3 +127,14 @@ class GeofenceRepository:
         self.session.add(geofence)
         await self.session.commit()
         await self.session.refresh(geofence)
+
+    async def get_geofence_attendances(self, fence_code: str):
+        stmt = (
+            select(AttendanceRecord)
+            .options(selectinload(AttendanceRecord.user))
+            .filter(AttendanceRecord.fence_code == fence_code)
+        )
+        result = await self.session.execute(stmt)
+
+        attendances = result.scalars().all()
+        return attendances
