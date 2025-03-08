@@ -42,5 +42,5 @@ class UserRepository:
 
         user.hashed_password = new_hashed_password
         await self.session.commit()
-
+        
         return {"message": "Successfully changed password"}
