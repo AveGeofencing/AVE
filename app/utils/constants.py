@@ -6,7 +6,7 @@ PASSWORD_RESET_TOKEN_EXPIRY_MINUTES = 20
 
 # Email subjects
 EMAIL_SUBJECTS = {
-    "PASSWORD_RESET": "Password Reset Request",
+    "PASSWORD_RESET": "Password Reset Request ?",
     "PASSWORD_CHANGED": "Password Changed",
     "WELCOME": "Welcome to Ave Geofencing",
     "ATTENDANCE_CONFIRMATION": "Attendance Confirmation",

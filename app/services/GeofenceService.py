@@ -153,7 +153,7 @@ class GeofenceService:
     async def get_geofence_attendances(
         self, fence_code: str, user_id: str
     ) -> Dict[str, any]:
-        geofence = await self.get_geofence_by_fence_code(fence_code=fence_code)
+        geofence = await self.geofenceRepository.get_geofence_by_fence_code(fence_code=fence_code)
         if not geofence:
             raise HTTPException(
                 status_code=404,
@@ -251,7 +251,8 @@ class GeofenceService:
     async def deactivate_geofence(
         self, geofence_name: str, date: datetime, user_matric: str
     ):
-        geofence = await self.get_geofence(geofence_name, date)
+        geofence = await self.geofenceRepository.get_geofence(geofence_name, date)
+        
         if geofence is None:
             raise HTTPException(
                 status_code=404, detail=f"Geofence {geofence_name} not found."
@@ -263,17 +264,15 @@ class GeofenceService:
             )
         try:
             if geofence.status == "inactive":
-                raise GeofenceStatusException(
-                    "Geofence is already inactive"
-                )
+                raise GeofenceStatusException("Geofence is already inactive")
 
             await self.geofenceRepository.deactivate_geofence(
                 geofence_name=geofence.name, date=date
             )
-            return {"message" : "Geofence deactivated successfully"}
-        
+            return {"message": "Geofence deactivated successfully"}
+
         except GeofenceStatusException as e:
-            raise HTTPException(status_code=403, detail=f"{str(e)}" )
+            raise HTTPException(status_code=403, detail=f"{str(e)}")
         except Exception as e:
             logger.error(f"Something went wrong with deactivating geofence: {str(e)}")
             raise HTTPException(

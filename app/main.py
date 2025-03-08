@@ -3,7 +3,7 @@ from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
-from .utils.APIKeys import get_api_key
+from .auth.APIKeys import get_api_key
 
 from .routers import *
 from .database import sessionmanager, Base
@@ -49,7 +49,7 @@ app.add_middleware(
 )
 
 
-@app.get("/")
+@app.get("/", dependencies=[Depends(get_api_key)])
 async def index():
     return "Hello World 1"
 

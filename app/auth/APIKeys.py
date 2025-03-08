@@ -1,6 +1,6 @@
 from fastapi import HTTPException, Security
 from fastapi.security import APIKeyHeader
-from .config import settings
+from ..utils.config import settings
 import logging
 
 logger = logging.getLogger("uvicorn")

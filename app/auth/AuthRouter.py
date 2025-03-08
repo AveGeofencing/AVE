@@ -6,7 +6,7 @@ from app.auth.sessions.SessionHandler import SessionHandler
 from typing import Annotated
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.utils.APIKeys import get_api_key
+from .APIKeys import get_api_key
 from ..database import get_db_session
 from passlib.context import CryptContext
 

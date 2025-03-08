@@ -2,7 +2,7 @@ from typing import Annotated
 from fastapi import APIRouter, BackgroundTasks, Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.utils.APIKeys import get_api_key
+from ..auth.APIKeys import get_api_key
 
 from ..services import UserService
 from ..database.database import get_db_session
