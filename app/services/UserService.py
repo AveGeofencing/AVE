@@ -53,22 +53,6 @@ class TokenError(UserServiceError):
     pass
 
 
-class Result:
-    """Class representing an operation result with success/failure state"""
-
-    def __init__(self, success: bool, data: Any = None, error: str = None):
-        self.success = success
-        self.data = data
-        self.error = error
-
-    @classmethod
-    def ok(cls, data: Any = None) -> "Result":
-        return cls(success=True, data=data)
-
-    @classmethod
-    def fail(cls, error: str) -> "Result":
-        return cls(success=False, error=error)
-
 
 class UserService:
     def __init__(
@@ -104,6 +88,12 @@ class UserService:
                 )
 
             hashed_password = bcrypt_context.hash(user_data.password)
+            #Store user temporarily, with 'verified?' being false- awaiting implementation
+
+            #Generate 6 digit code and store code and database while sending a message that code has been sent 
+            # to the frontend
+
+
             return await self.user_repository.create_new_user(
                 user_data, hashed_password
             )
@@ -121,6 +111,16 @@ class UserService:
             raise HTTPException(
                 status_code=500, detail="Something went wrong, contact admin."
             )
+
+
+    async def verify_registration_code(self, code: int):
+        #Check if code exist in database againsts user email and it has not expired
+        code = ...
+        if(code is None or "expired"):
+            return "Code has expired. Resend to get a new code"
+        
+        if(code is "Verified"):
+            return "mark as verified"
 
     async def get_user_by_email_or_matric(
         self, email: str = None, matric: str = None
@@ -146,7 +146,7 @@ class UserService:
 
         except Exception as e:
             logger.error(
-                f"Error fetching user by email/matric: {email or matric}", exc_info=True
+                f"Error fetching user by email/matric: {email} or {matric}", exc_info=True
             )
             raise HTTPException(
                 status_code=500, detail="Something went wrong, contact admin."

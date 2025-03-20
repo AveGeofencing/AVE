@@ -7,7 +7,7 @@ from ..services import UserService
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import Depends
 from ..database import get_db_session
-from ..dependencies.sessionDependencies import authenticate_admin_user
+from ..auth.sessions.sessionDependencies import authenticate_admin_user
 
 AdminRouter = APIRouter(prefix="/user/admin", tags=["Users/Admin"])
 

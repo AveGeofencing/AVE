@@ -4,12 +4,19 @@ from pydantic import EmailStr
 
 class Settings(BaseSettings):
     DATABASE_URL: str
+    ALEMBIC_DATABASE_URL: str
     SECRET_KEY: str
     ALGORITHM: str
     echo_sql: bool = False
     API_KEYS: str
     WANT_SINGLE_SIGNIN: bool
     BASE_URL: str
+
+    #Redis config
+    REDIS_HOST: str
+    REDIS_PORT: int
+    REDIS_DB: int
+    
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
 

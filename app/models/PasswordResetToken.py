@@ -1,7 +1,7 @@
 from datetime import datetime
 from sqlalchemy import TIMESTAMP, Boolean, Column, DateTime, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship, Mapped, mapped_column
-from app.database.database import Base
+from ..database import Base
 
 
 class PasswordResetToken(Base):
@@ -12,7 +12,7 @@ class PasswordResetToken(Base):
         String(50), ForeignKey("users.user_matric"), nullable=False
     )  # Link to the user
     token: Mapped[str] = mapped_column(
-        String(120), unique=True, nullable=False
+        String(255), unique=True, nullable=False
     )  # The reset token
     expires_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False

@@ -1,8 +1,8 @@
 from typing import Annotated
 from fastapi import Depends, Request, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-from ..auth.sessions.SessionHandler import SessionHandler
-from ..database.database import get_db_session
+from .SessionHandler import SessionHandler
+from ...database import get_db_session
 
 DBSessionDep = Annotated[AsyncSession, Depends(get_db_session)]
 

@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..schemas import GeofenceCreateModel, AttendanceRecordModel, AttendanceRecordOut
 from ..database import get_db_session
-from ..dependencies.sessionDependencies import (
+from ..auth.sessions.sessionDependencies import (
     authenticate_admin_user,
     authenticate_student_user,
     authenticate_user_by_session_token,

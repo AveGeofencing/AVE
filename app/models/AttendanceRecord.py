@@ -7,7 +7,7 @@ from sqlalchemy import (
     String,
 )
 from sqlalchemy.orm import mapped_column, Mapped, relationship
-from app.database.database import Base
+from ..database import Base
 
 
 class AttendanceRecord(Base):
