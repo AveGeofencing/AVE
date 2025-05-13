@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, ConfigDict, EmailStr
 
 
 class UserCreateModel(BaseModel):
@@ -7,6 +7,14 @@ class UserCreateModel(BaseModel):
     user_matric: str
     password: str
     role: str
+    verification_code: str
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
+
+class UserOutputModel(BaseModel):
+    email: EmailStr
+    username: str
+    user_matric: str
+    role: str
+
+    model_config = ConfigDict(from_attributes=True)

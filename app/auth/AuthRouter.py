@@ -1,35 +1,37 @@
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+import logging
+from fastapi.security import OAuth2PasswordRequestForm
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
-
-from app.auth.sessions.SessionHandler import SessionHandler
-
 from typing import Annotated
-from sqlalchemy.ext.asyncio import AsyncSession
 
+from .sessions import SessionHandler, get_session_handler
 from .APIKeys import get_api_key
-from ..database import get_db_session
+from ..utils.config import get_app_settings
+
 from passlib.context import CryptContext
 
-AuthRouter = APIRouter(prefix="/auth", tags=["auth"])
 
-DBSessionDep = Annotated[AsyncSession, Depends(get_db_session)]
+AuthRouter = APIRouter(prefix="/auth", tags=["auth"])
+# Dependency
 password_request_form = Annotated[OAuth2PasswordRequestForm, Depends()]
 api_key_dependency = Annotated[str, Depends(get_api_key)]
+SessionHandlerDependency = Annotated[SessionHandler, Depends(get_session_handler)]
+settings = get_app_settings()
 
 bcrypt_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 SESSION_TIMEOUT_MINUTES = 24 * 60
+
+logger = logging.getLogger("uvicorn")
 
 
 @AuthRouter.post("/token", dependencies=[Depends(get_api_key)])
 async def login(
     response: Response,
     form_data: password_request_form,
-    session: DBSessionDep,
+    session_handler: SessionHandlerDependency,
 ):
-    sessionHandler = SessionHandler(session)
 
-    user_login_response = await sessionHandler.login(
+    user_login_response = await session_handler.login(
         user_matric=form_data.username,
         email=form_data.username,
         password=form_data.password,
@@ -40,9 +42,9 @@ async def login(
         key="session_token",
         value=session_token,
         httponly=True,
-        domain=".onrender.com",
+        # domain=settings.COOKIE_DOMAIN,
         secure=True,  # Set to True for HTTPS
-        samesite="None",
+        samesite="none",
         max_age=SESSION_TIMEOUT_MINUTES * 60,
     )
 
@@ -50,7 +52,9 @@ async def login(
 
 
 @AuthRouter.delete("/logout")
-async def logout(request: Request, response: Response, session: DBSessionDep) -> dict:
+async def logout(
+    request: Request, response: Response, session_handler: SessionHandlerDependency
+) -> dict:
     """
     This function handles the logout process for a user. It retrieves the session token from the request cookies,
     checks if it exists, and then deactivates the session using the SessionHandler.
@@ -65,22 +69,22 @@ async def logout(request: Request, response: Response, session: DBSessionDep) ->
     if not session_token:
         raise HTTPException(status_code=401, detail="No session token provided.")
 
-    sessionHandler = SessionHandler(session)
-    log_out_message = await sessionHandler.deactivate_session(session_token)
+    log_out_message = await session_handler.deactivate_session(session_token)
 
     response.delete_cookie("session_token")
     return {"message": log_out_message}
 
 
 @AuthRouter.get("/get_user_by_token")
-async def get_user_by_session_token(request: Request, session: DBSessionDep):
-    sessionHandler = SessionHandler(session)
+async def get_user_by_session_token(
+    request: Request, session_handler: SessionHandlerDependency
+):
     session_token = request.cookies.get("session_token")
 
     if not session_token:
         raise HTTPException(status_code=401, detail="No session token provided")
 
-    user_data = await sessionHandler.get_user_by_session(session_token)
+    user_data = await session_handler.get_user_by_session(session_token)
 
     if not user_data:
         raise HTTPException(status_code=401, detail="Session expired")

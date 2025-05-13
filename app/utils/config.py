@@ -1,23 +1,27 @@
+import os
+from typing import Union
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import EmailStr
 
 
 class Settings(BaseSettings):
     DATABASE_URL: str
-    ALEMBIC_DATABASE_URL: str
+    ALEMBIC_DATABASE_URL: str | None = None
     SECRET_KEY: str
     ALGORITHM: str
     echo_sql: bool = False
     API_KEYS: str
     WANT_SINGLE_SIGNIN: bool
     BASE_URL: str
+    COOKIE_DOMAIN: str
 
-    #Redis config
-    REDIS_HOST: str
-    REDIS_PORT: int
-    REDIS_DB: int
-    
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+    # Redis config
+    REDIS_URL: str
+
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        extra="ignore",
+    )
 
 
 class EmailSettings(BaseSettings):
@@ -31,8 +35,14 @@ class EmailSettings(BaseSettings):
     USE_CREDENTIALS: bool
     VALIDATE_CERTS: bool
 
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+    model_config = SettingsConfigDict(
+        env_file=".env", extra="ignore",
+    )
 
 
-email_settings = EmailSettings()
-settings = Settings()
+def get_email_settings():
+    return EmailSettings()
+
+
+def get_app_settings():
+    return Settings()

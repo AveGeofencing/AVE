@@ -1,11 +1,19 @@
-from ..models import Session, User
+from typing import Annotated
 
-from sqlalchemy.ext.asyncio import AsyncSession
+from ..models import User
+from ..database import get_db_session
+
+from fastapi import Depends
 from sqlalchemy import and_, delete, or_
-from datetime import datetime
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
 
+DatabaseDependency = Annotated[AsyncSession, Depends(get_db_session)]
+
+"""
+Keeping this class in for backwards compatibility. I don't even know
+"""
 
 class SessionRepository:
     def __init__(self, db_session: AsyncSession):
@@ -18,52 +26,24 @@ class SessionRepository:
 
         return user
 
-    async def get_user_session_by_token(self, session_token):
-        stmt = (
-            select(Session)
-            .options(selectinload(Session.user))
-            .filter(and_(Session.token == session_token, Session.is_expired == False))
-        )
+    # async def get_user_session_by_token(self, session_token):
+    #     stmt = (
+    #         select(Session)
+    #         .options(selectinload(Session.user))
+    #         .filter(and_(Session.token == session_token, Session.is_expired == False))
+    #     )
 
-        result = await self.db_session.execute(stmt)
-        return result.scalars().first()
+    #     result = await self.db_session.execute(stmt)
+    #     return result.scalars().first()
 
-    async def get_user_session_by_matric(self, user_matric: str):
-        stmt = select(Session).filter(
-            and_(Session.user_id == user_matric, Session.is_expired == False)
-        )
-        result = await self.db_session.execute(stmt)
+    # async def get_user_session_by_matric(self, user_matric: str):
+    #     stmt = select(Session).filter(
+    #         and_(Session.user_id == user_matric, Session.is_expired == False)
+    #     )
+    #     result = await self.db_session.execute(stmt)
 
-        return result.scalars().first()
+    #     return result.scalars().first()
 
-    async def create_new_session(
-        self,
-        session_token,
-        EXPIRES_AT,
-        user_matric: str,
-        created_at: datetime,
-        updated_at: datetime,
-    ):
 
-        new_session = Session(
-            user_id=user_matric,
-            token=session_token,
-            expires_at=EXPIRES_AT,
-            created_at=created_at,
-            updated_at=updated_at,
-        )
-
-        self.db_session.add(new_session)
-        await self.db_session.commit()
-        await self.db_session.refresh(new_session)
-        return new_session.token
-
-    async def deactivate_session(self, session_token):
-        stmt = delete(Session).filter(Session.token == session_token)
-        await self.db_session.execute(stmt)
-        await self.db_session.commit()
-
-    async def deactivate_all_user_sessions(self, user_matric: str):
-        stmt = delete(Session).filter(Session.user_id == user_matric)
-        await self.db_session.execute(stmt)
-        await self.db_session.commit()
+def get_session_repository(db_session: DatabaseDependency):
+    return SessionRepository(db_session)

@@ -1,9 +1,9 @@
 import logging
 from fastapi_mail import FastMail, MessageSchema, ConnectionConfig
-from ..utils.config import email_settings
+from ..utils import get_email_settings
 
 logger = logging.getLogger("uvicorn")
-
+email_settings = get_email_settings()
 
 conf = ConnectionConfig(
     MAIL_USERNAME=email_settings.MAIL_USERNAME,
@@ -18,7 +18,10 @@ conf = ConnectionConfig(
 
 # Send Email Function
 async def send_email(
-    subject: str, recipients: list, body: dict, template_name: str = None
+    subject: str, 
+    recipients: list, 
+    body: dict, 
+    template_name: str|None = None
 ):
     try:
         message = MessageSchema(
