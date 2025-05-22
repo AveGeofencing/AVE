@@ -1,43 +1,33 @@
 import os
-from typing import Union
-from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import EmailStr
+from typing import Optional
+from pydantic.dataclasses import dataclass
 
 
-class Settings(BaseSettings):
-    DATABASE_URL: str
-    ALEMBIC_DATABASE_URL: str | None = None
-    SECRET_KEY: str
-    ALGORITHM: str
-    echo_sql: bool = False
-    API_KEYS: str
-    WANT_SINGLE_SIGNIN: bool
-    BASE_URL: str
-    COOKIE_DOMAIN: str
-
-    # Redis config
-    REDIS_URL: str
-
-    model_config = SettingsConfigDict(
-        env_file=".env",
-        extra="ignore",
-    )
+@dataclass
+class Settings:
+    DATABASE_URL: str = os.getenv("DATABASE_URL", "")
+    ALEMBIC_DATABASE_URL: Optional[str] = os.getenv("ALEMBIC_DATABASE_URL")
+    SECRET_KEY: str = os.getenv("SECRET_KEY", "")
+    ALGORITHM: str = os.getenv("ALGORITHM", "")
+    ECHO_SQL: bool = os.getenv("ECHO_SQL", "false").lower() == "true"
+    API_KEYS: str = os.getenv("API_KEYS", "")
+    WANT_SINGLE_SIGNIN: bool = os.getenv("WANT_SINGLE_SIGNIN", "false").lower() == "true"
+    BASE_URL: str = os.getenv("BASE_URL", "")
+    COOKIE_DOMAIN: str = os.getenv("COOKIE_DOMAIN", "")
+    REDIS_URL: str = os.getenv("REDIS_URL", "")
 
 
-class EmailSettings(BaseSettings):
-    MAIL_USERNAME: str
-    MAIL_PASSWORD: str
-    MAIL_FROM: EmailStr
-    MAIL_PORT: int
-    MAIL_SERVER: str
-    MAIL_STARTTLS: bool
-    MAIL_SSL_TLS: bool
-    USE_CREDENTIALS: bool
-    VALIDATE_CERTS: bool
-
-    model_config = SettingsConfigDict(
-        env_file=".env", extra="ignore",
-    )
+@dataclass
+class EmailSettings:
+    MAIL_USERNAME: str = os.getenv("MAIL_USERNAME", "")
+    MAIL_PASSWORD: str = os.getenv("MAIL_PASSWORD", "")
+    MAIL_FROM: str = os.getenv("MAIL_FROM", "email@example.com")
+    MAIL_PORT: int = int(os.getenv("MAIL_PORT", "587"))
+    MAIL_SERVER: str = os.getenv("MAIL_SERVER", "")
+    MAIL_STARTTLS: bool = os.getenv("MAIL_STARTTLS", "true").lower() == "true"
+    MAIL_SSL_TLS: bool = os.getenv("MAIL_SSL_TLS", "false").lower() == "true"
+    USE_CREDENTIALS: bool = os.getenv("USE_CREDENTIALS", "true").lower() == "true"
+    VALIDATE_CERTS: bool = os.getenv("VALIDATE_CERTS", "true").lower() == "true"
 
 
 def get_email_settings():
